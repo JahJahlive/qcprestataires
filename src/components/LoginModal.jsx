@@ -1,13 +1,12 @@
 import React, { useState } from 'react'
 import api from '../api'
-import { useNavigate } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 
 function LoginModal() {
    // State for active tab
    const [activeTab, setActiveTab] = useState('signup'); // Default to signup as per original code
    const [error, setError] = useState(null);
    const [success, setSuccess] = useState(null);
-   let navigate = useNavigate();
 
    // State for login form
    const [loginForm, setLoginForm] = useState({
@@ -62,7 +61,6 @@ function LoginModal() {
         localStorage.setItem('token', response.data.token);
         setSuccess('Connexion reussie!');
         setError(null)
-        return navigate("/dashboard");
       } catch (err) {
         setError(err.response?.data?.message || 'Connexion échouée');
         setSuccess(null);

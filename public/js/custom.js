@@ -228,7 +228,7 @@ All JavaScript fuctions Start
 	// > Nav submenu show hide on mobile by = custom.js
 	function mobile_nav(){
 		jQuery(".sub-menu").parent('li').addClass('has-child');
-		jQuery("<div class='fa fa-angle-right submenu-toogle'></div>").insertAfter(".has-child > a");
+	//	jQuery("<div class='fa fa-angle-right submenu-toogle'></div>").insertAfter(".has-child > a");
 
 		jQuery('.has-child a+.submenu-toogle').on('click',function(ev) {
 

@@ -1,11 +1,11 @@
-import React , { useEffect }from 'react'
+import React , { useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
-import { useStateContext } from '../../context/ContextProvider';
-import HeaderAuth from '../HeaderAuth';
-import axiosClient from '../../axios-client';
+import { useStateContext } from '../../context/ContextProvider'
+import HeaderAuth from '../HeaderAuth'
+import axiosClient from '../../axios-client'
 
 export default function AuthLayout() {
-  const {token, setToken, setUser} = useStateContext();
+  const {token, setToken, setUser} = useStateContext()
 
   if (!token) {
     return <Navigate to="/" />
@@ -14,7 +14,7 @@ export default function AuthLayout() {
   useEffect(() => {
     axiosClient.get('/user')
     .then(({ data }) => {
-      setUser(data);
+      setUser(data)
     })
     .catch((error) => {
       setUser({});

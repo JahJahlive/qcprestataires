@@ -1,40 +1,16 @@
 import React from 'react'
 
-function Footer() {
+function Footer({ categories }) {
   return (
-    <footer className="site-footer footer-light">
-      <div className="footer-top-newsletter">
-        <div className="container">
-            <div className="sf-news-letter">
-            <span>Subscribe Our Newsletter</span>
-            <form>
-                <div className="form-group sf-news-l-form">
-                <input type="text" className="form-control" placeholder="Enter Your Email" />
-                <button type="submit" className="sf-sb-btn">
-                    Submit
-                </button>
-                </div>
-            </form>
-            </div>
-        </div>
-      </div>
+    <footer className="site-footer footer-light" id='contact'>
       <div className="footer-top">
         <div className="container">
             <div className="row">
             {/* Footer col 1 */}
             <div className="col-lg-3 col-md-6 col-sm-6 m-b30">
                 <div className="sf-site-link sf-widget-link">
-                <h4 className="sf-f-title">Site Links</h4>
+                <h4 className="sf-f-title">Liens</h4>
                 <ul>
-                    <li>
-                    <a href="blog-grid.html">Blog</a>
-                    </li>
-                    <li>
-                    <a href="contact-us.html">Contact Us</a>
-                    </li>
-                    <li>
-                    <a href="job-grid.html">Jobs</a>
-                    </li>
                     <li>
                     <a href="all-categories.html">Categories</a>
                     </li>
@@ -44,19 +20,13 @@ function Footer() {
             {/* Footer col 2 */}
             <div className="col-lg-3 col-md-6 col-sm-6 m-b30">
                 <div className="sf-site-link sf-widget-cities">
-                <h4 className="sf-f-title">Popular Cities</h4>
+                <h4 className="sf-f-title">Villes</h4>
                 <ul>
                     <li>
-                    <a href="all-categories.html">Ballston Lake</a>
+                    <a href="all-categories.html">Douala</a>
                     </li>
                     <li>
-                    <a href="all-categories.html">Batumi</a>
-                    </li>
-                    <li>
-                    <a href="all-categories.html">Brooklyn</a>
-                    </li>
-                    <li>
-                    <a href="all-categories.html">Cambridge</a>
+                    <a href="all-categories.html">Yaounde</a>
                     </li>
                 </ul>
                 </div>
@@ -66,18 +36,13 @@ function Footer() {
                 <div className="sf-site-link sf-widget-categories">
                 <h4 className="sf-f-title">Categories</h4>
                 <ul>
-                    <li>
-                    <a href="categories-detail.html">Car Service</a>
-                    </li>
-                    <li>
-                    <a href="categories-detail.html">House Cleaning</a>
-                    </li>
-                    <li>
-                    <a href="categories-detail.html">Transport</a>
-                    </li>
-                    <li>
-                    <a href="categories-detail.html">Yoga Classes</a>
-                    </li>
+                    {
+                        categories.slice(0, 5).map((categorie) => (
+                            <li>
+                            <a href={categorie.slug}>{categorie.name}</a>
+                            </li>
+                        ))
+                    }
                 </ul>
                 </div>
             </div>
@@ -86,10 +51,8 @@ function Footer() {
                 <div className="sf-site-link sf-widget-contact">
                 <h4 className="sf-f-title">Contact Info</h4>
                 <ul>
-                    <li>Indiaas</li>
-                    <li>+41 232 525 5257</li>
-                    <li>+41 856 525 5369</li>
-                    <li>hello@Servicefinder.com</li>
+                    <li>Douala, Cite Sic</li>
+                    <li>+237 693 92 2252</li>
                 </ul>
                 </div>
             </div>
@@ -102,11 +65,12 @@ function Footer() {
             <div className="sf-footer-bottom-section">
             <div className="sf-f-logo">
                 <a href="javascript:void(0);">
-                <img src="images/logo-dark.png" alt="" />
+                {/* <h3 className='site-logo-has text-white'>WARAPS</h3> */}
+                <h2 className='site-logo-has'>WARAPS</h2>
                 </a>
             </div>
             <div className="sf-f-copyright">
-                <span>Copyright 2022 | Aone Theme. All Rights Reserved</span>
+                <span>Copyright 2025 | YK Solutions. All Rights Reserved</span>
             </div>
             <div className="sf-f-social">
                 <ul className="socila-box">
