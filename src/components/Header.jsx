@@ -1,14 +1,8 @@
 import React, { useEffect } from 'react'
 import { useStateContext } from '../context/ContextProvider'
-import {  useLocation } from 'react-router-dom';
 
 function Header() {
     const {user} = useStateContext();
-    const location = useLocation();
-
-    useEffect(() => {
-        console.log('user : ', user, location)
-    }, [])
 
   return (
     <header className="site-header header-style-1 mobile-sider-drawer-menu header-full-width">
@@ -36,7 +30,7 @@ function Header() {
             >
                 <span className="sr-only">Toggle navigation</span>
                 <span className="icon-bar icon-bar-first"></span>
-                <span className="icon-bar icon-bar-two"></span>
+                <span className="icon-bar icon-bar-two"></span> 
                 <span className="icon-bar icon-bar-three"></span>
             </button>
 
@@ -57,7 +51,7 @@ function Header() {
                 (Object.keys(user).length === 0) && 
                     <button
                     type="button"
-                    className="site-button aon-btn-login"
+                    className="site-button aon-btn-login text-white"
                     data-toggle="modal"
                     data-target="#login-signup-model"
                 >
@@ -66,7 +60,7 @@ function Header() {
               }  
                 
                 {/* Sign up */}
-                <a href="mc-profile.html" className="site-button aon-btn-signup m-l20">
+                <a href="mc-profile.html" className="site-button aon-btn-signup m-l20 text-white">
                     <i className="fa fa-plus"></i> Faites une reservation
                 </a>
                 </div>

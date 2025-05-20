@@ -1,14 +1,24 @@
 import React, {useState, useEffect} from 'react'
 import LoginModal from '../components/LoginModal'
-import axiosClient from '../axios-client'
 import Carousel from 'react-multi-carousel'
 import 'react-multi-carousel/lib/styles.css'
 import { CATEGORIES_IMAGES } from '../utils/data'
 import Footer from '../components/Footer'
+import axiosClient from "../axios-client"
 
 export default function Home() {
   const [categories, setCategories] = useState([])
-
+  
+  const getCategories = () => {
+    axiosClient.get('/categories')
+    .then(({ data }) => {
+    console.log(data)
+    setCategories(data)
+    })
+    .catch((error) => {
+    });
+  }
+  
   const responsive = {
     superLargeDesktop: {
       // the naming can be any, depends on you.
@@ -28,16 +38,6 @@ export default function Home() {
       items: 1
     }
   };
-
-  const getCategories = () => {
-    axiosClient.get('/categories')
-    .then(({ data }) => {
-      console.log(data)
-      setCategories(data)
-    })
-    .catch((error) => {
-    });
-  }
 
   useEffect(() => {
     getCategories()
@@ -76,18 +76,18 @@ export default function Home() {
                     <div className="aon-searchbar-left">
                     <ul className="clearfix sf-searchfileds-count-5">
                         <li>
-                        <label>Recherche</label>
-                        <input
+                          <label>Recherche</label>
+                          <input
                             type="text"
                             value=""
-                            placeholder=""
+                            placeholder="Recherche"
                             id="keyword"
                             name="keyword"
-                            className="form-control sf-form-control"
-                        />
-                        <span className="sf-search-icon">
+                              className="form-control sf-form-control"
+                          />
+                          <span className="sf-search-icon">
                             <img src="images/search-bar/keyword.png" alt="" />
-                        </span>
+                          </span>
                         </li>
                         <li>
                         <label>Categories</label>
@@ -158,7 +158,7 @@ export default function Home() {
                     </ul>
                     </div>
                     <div className="aon-searchbar-right">
-                    <button type="button" className="site-button">
+                    <button type="button" className="site-button text-white sf-search-btn">
                         <i className="fa fa-search"></i> Recherchez
                     </button>
                     </div>

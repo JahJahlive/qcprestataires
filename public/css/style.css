@@ -13748,4 +13748,18 @@ button.close { line-height: 12px; }
 
 .g-recaptcha { display: table; margin: 15px auto 30px; }
 
+/*===========================================
+  Mes ajouts
+============================================*/
 
+
+.provider-description {
+  min-height: 60px; /* Hauteur minimale pour uniformité */
+  max-height: 60px; /* Limite la hauteur maximale */
+  overflow: hidden; /* Cache le texte dépassant */
+  text-overflow: ellipsis; /* Ajoute des points de suspension */
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* Limite à 3 lignes */
+  -webkit-box-orient: vertical;
+  margin-bottom: 10px; /* Espace sous la description */
+}

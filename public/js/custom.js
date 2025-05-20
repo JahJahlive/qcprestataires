@@ -30,7 +30,7 @@ All JavaScript fuctions Start
     
 // Bootstrap Select box function by  = bootstrap-select.min.js
     function Bootstrap_Select(){	
-            jQuery('.sf-select-box').selectpicker();
+		jQuery('.sf-select-box').selectpicker();
     } 
     
 // Bootstrap Slider function by  = bootstrap-slider.min.js   
