@@ -41,7 +41,7 @@ export default function AuthLayout() {
                     <li className="active">
                       <NavLink to="dashboard">
                         <i className="fa fa-dashboard"></i>
-                        <span className="admin-nav-text">Tableau de bord</span>
+                        <span className="admin-nav-text">Accueil</span>
                       </NavLink>
                     </li>
                     <li>
