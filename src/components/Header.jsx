@@ -26,6 +26,19 @@ function Header() {
         })
     }
 
+       // Initialize theia-sticky-sidebar on route change
+       useEffect(() => {
+        if(jQuery('.sticky-header').length){
+          var sticky = new Waypoint.Sticky({
+            element: jQuery('.sticky-header')
+          });
+        }
+        $('.rightSidebar')
+			.theiaStickySidebar({
+				additionalMarginTop: 100
+			});	
+    }, [location.pathname]); // Re-run on route change
+
   return (
     <header className="site-header header-style-1 mobile-sider-drawer-menu header-full-width">
         <div className={`sticky-header main-bar-wraper navbar-expand-lg`}>
@@ -75,7 +88,7 @@ function Header() {
                 (
                   <div
                     className="site-buttdon aon-btn-logein mx-1"
-                    style={{fontSize: '25px', cursor: 'pointer', color: 'red'}}
+                    style={{fontSize: '25px', cursor: 'pointer', color: 'darkblue'}}
                     data-toggle="modal"
                     data-target="#login-signup-model"
                   >

@@ -11702,9 +11702,9 @@ Search list 2
 .header-right {	height:70px; }
 .header-widget-wrap { margin:0px; display: -ms-flexbox; display: flex; -ms-flex-align: center ; align-items: center; }
 .nav-btn-wrap { display: block; padding: 25px; }
-.nav-btn-admin { font-size: 21px; cursor: pointer; display: block; background: #022279; color: #fff !important; border-radius: 5px; padding:10px 20px; }
+.nav-btn-admin { font-size: 21px; cursor: pointer; display: block; background: #022279; color: #fff !important; border-radius: 5px; padding:5px 10px; }
 .nav-btn-admin .nav-btn-text { font-size:14px; }
-.nav-btn-admin .fa { font-size:18px; border-left:1px solid #596892; margin-left:10px; padding-left: 10px; }
+.nav-btn-admin .fa { font-size:18px;}
     
     
 .header-widget-wrap > .header-widget {display:inline-flex; border-left:1px solid #ddd; position:relative; cursor:pointer; -ms-flex-align: center ; align-items: center ; }
