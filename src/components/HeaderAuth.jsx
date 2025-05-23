@@ -32,60 +32,60 @@ function HeaderAuth() {
   return (
     <header id="header-admin-wrap" className="header-admin-fixed">
     {/* Header Start */}
-    <div id="header-admin">
-        <div className="container">
-            
-            {/* Left Side Content */}
-            <div className="header-left">
+        <div id="header-admin">
+            <div className="container">
                 
-                <div className="my-account-logo">
-                <Link to="/">
-                    <h3 className={`site-logo-has}`}>WARAPS</h3>
-                    <h3 className='site-logo-sticky'>WARAPS</h3>
-                </Link>
-                </div>
-                
-          
-                
-            </div>
-            {/* Left Side Content End */}
-            
-            {/* Right Side Content */}
-            <div className="header-right">
-                
-                <div className="header-menu">
-                    {/* NAV Toggle Button */}
-                    <button id="mobile-side-drawer" data-target=".header-nav" data-toggle="collapse" type="button" className="navbar-toggler collapsed">
-                        <span className="sr-only">Toggle navigation</span>
-                        <span className="icon-bar icon-bar-first"></span>
-                        <span className="icon-bar icon-bar-two"></span>
-                        <span className="icon-bar icon-bar-three"></span>
-                    </button> 
-
-                    {/* MAIN Vav */}
-               
-                </div>
-                
-                  
-                <div className="pro-pic-info-wrap d-flex">
-                    <div className="pro-pic-box">
-                        <img src="images/user.jpg" alt=""/>
-                    </div>
-                    <div className="pro-pic-info">
-                        <strong>{user.name}</strong>
-                        <span>Designer</span>
-                    </div>
-                    <span className="feather-icon has-toltip">
-                        <i className="feather-power"></i>
-                        <span className="header-toltip">Notification</span>
-                    </span>
-                </div>
+                {/* Left Side Content */}
+                <div className="header-left">
                     
-            </div>
-            {/* Right Side Content End */}
+                    <div className="my-account-logo">
+                    <Link to="/">
+                        <h3 className={`site-logo-has}`}>WARAPS</h3>
+                        <h3 className='site-logo-sticky'>WARAPS</h3>
+                    </Link>
+                    </div>
+                    
+            
+                    
+                </div>
+                {/* Left Side Content End */}
+                
+                {/* Right Side Content */}
+                <div className="header-right">
+                    
+                    <div className="header-menu">
+                        {/* NAV Toggle Button */}
+                        <button id="mobile-side-drawer" data-target=".header-nav" data-toggle="collapse" type="button" className="navbar-toggler collapsed">
+                            <span className="sr-only">Toggle navigation</span>
+                            <span className="icon-bar icon-bar-first"></span>
+                            <span className="icon-bar icon-bar-two"></span>
+                            <span className="icon-bar icon-bar-three"></span>
+                        </button> 
 
+                        {/* MAIN Vav */}
+                
+                    </div>
+                    
+                    
+                    <div className="pro-pic-info-wrap d-flex">
+                        <div className="pro-pic-box">
+                            <img src="images/user.jpg" alt=""/>
+                        </div>
+                        <div className="pro-pic-info">
+                            <strong>{user.name}</strong>
+                            <span>Designer</span>
+                        </div>
+                        <span className="feather-icon has-toltip">
+                            <i className="feather-power"></i>
+                            <span className="header-toltip">Notification</span>
+                        </span>
+                    </div>
+                        
+                </div>
+                {/* Right Side Content End */}
+
+            </div>
         </div>
-    </div>
     {/* Header End */}
     </header>      
   )
