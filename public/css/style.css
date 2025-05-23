@@ -13102,7 +13102,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f0a920', end
 
 
 
-#clockdiv{ display: -ms-flexbox; display: flex; -ms-flex-wrap: wrap; flex-wrap: wrap; max-width:480px; border:1px solid rgba(255, 255, 255, 0.4); border-radius:10px; }
+#clockdiv{ display: -ms-flexbox; display: flex; -ms-flex-wrap: nowrap; flex-wrap: nowrap; max-width:480px; border:1px solid rgba(255, 255, 255, 0.4); border-radius:10px; }
 #clockdiv > div { padding: 10px; display:block; width:25%; text-align:center; }
 #clockdiv div > span { display:block; font-size:24px; line-height:1.2; font-weight:600; }
 #clockdiv .smalltext{ padding-top: 5px;	font-size: 16px; }

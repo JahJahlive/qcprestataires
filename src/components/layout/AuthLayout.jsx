@@ -61,13 +61,7 @@ export default function AuthLayout() {
                         <i className="fa fa-calendar"></i>
                         <span className="admin-nav-text">Mes réservations</span>
                       </NavLink>
-                    </li>                             
-                    <li>
-                      <NavLink to="vedettes">
-                        <i className="fa fa-user-secret"></i>
-                        <span className="admin-nav-text">Membre en vedette</span>
-                      </NavLink>
-                    </li>
+                    </li>     
                     <li>
                       <NavLink to="equipes">
                         <i className="fa fa-users"></i>
