@@ -77,7 +77,7 @@ function HeaderAuth() {
                         </div>
                         <span className="feather-icon has-toltip">
                             <i className="feather-power"></i>
-                            <span className="header-toltip">Notification</span>
+                            <span className="header-toltip">Deconnexion</span>
                         </span>
                     </div>
                         

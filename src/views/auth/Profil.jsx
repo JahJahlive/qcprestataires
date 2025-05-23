@@ -9,13 +9,9 @@ function Profil() {
                 <li><a href="#aon-about-panel">À propos</a></li>
                 <li><a href="#aon-contact-panel">Contact</a></li>
                 <li><a href="#aon-adress-panel">Adresse</a></li>
-                <li><a href="#aon-serviceArea-panel">Zone de service</a></li>
-                <li><a href="#aon-servicePer-panel">Service effectué à</a></li>
                 <li><a href="#aon-socialMedia-panel">Médias sociaux</a></li>
                 <li><a href="#aon-passUpdate-panel">Mot de passe</a></li>
                 <li><a href="#aon-category-panel">Catégorie</a></li>
-                <li><a href="#aon-amenities-panel">Équipements</a></li>
-                <li><a href="#aon-languages-panel">Langues</a></li>
                 <li><a href="#aon-gallery-panel">Galerie</a></li>
                 <li><a href="#aon-video-panel">Vidéo</a></li>
             </ul>
@@ -287,48 +283,6 @@ function Profil() {
                       </div>
                   </div>
               </div> 
-
-              <div className="card aon-card" id="aon-serviceArea-panel">
-                <div className="card-header aon-card-header"><h4><i className="fa fa-building-o"></i> Rayon de la zone de service</h4></div>
-                  <div className="card-body aon-card-body">
-                    <div className="row">
-                          <div className="col-md-12">
-                              <div className="form-group">
-                                  <div className="sf-range-slider sf-range-w250">
-                                      <div className="sf-range-slider-control">Rayon : <span>45 km</span></div>
-                                      <input id="ex1" data-slider-id='ex1Slider' type="text" data-slider-min="0" data-slider-max="20" data-slider-step="1" data-slider-value="14"/>
-                                  </div>
-                              </div>
-                          </div>
-                      </div>
-                  </div>
-              </div> 
-
-              <div className="card aon-card" id="aon-servicePer-panel">
-                <div className="card-header aon-card-header"><h4><i className="fa fa-building-o"></i> Service effectué à</h4></div>
-                  <div className="card-body aon-card-body">
-                    <div className="row">
-                          <div className="col-md-12">
-                              <div className="aon-inputicon-box"> 
-                                  <div className="radio-inline-box service-perform-list">
-                                      <div className="checkbox sf-radio-checkbox sf-radio-check-2">
-                                          <input id="loc11" name="abc" value="five" type="radio"/>
-                                          <label htmlFor="loc11">Mon emplacement</label>
-                                      </div>
-                                      <div className="checkbox sf-radio-checkbox sf-radio-check-2">
-                                          <input id="loc22" name="abc" value="five" type="radio"/>
-                                          <label htmlFor="loc22">Emplacement du client</label>
-                                      </div>
-                                      <div className="checkbox sf-radio-checkbox sf-radio-check-2">
-                                          <input id="loc33" name="abc" value="five" type="radio"/>
-                                          <label htmlFor="loc33">Les deux</label>
-                                      </div>
-                                  </div>
-                              </div>
-                          </div>
-                      </div>
-                  </div>
-              </div>
               
               <div className="card aon-card" id="aon-socialMedia-panel">
                 <div className="card-header aon-card-header"><h4><i className="fa fa-share-alt"></i> Médias sociaux</h4></div>
@@ -470,24 +424,6 @@ function Profil() {
                   </div>
               </div>
 
-              <div className="card aon-card" id="aon-languages-panel">
-                <div className="card-header aon-card-header"><h4><i className="fa fa-language"></i> Langues</h4></div>
-                  <div className="card-body aon-card-body">
-                    <div className="row">
-                          <div className="col-md-12">
-                              <div className="form-group">
-                                  <label>Langues</label>
-                                  <select className="selectpicker" multiple data-live-search="true">
-                                      <option>Blanchisserie</option>
-                                      <option>Services de taxi</option>
-                                      <option>Concessionnaire automobile</option>
-                                      <option>Organisateur d'événements</option>
-                                    </select>
-                              </div>
-                          </div>
-                      </div>
-                  </div>
-              </div>
 
               <div className="card aon-card" id="aon-gallery-panel">
                 <div className="card-header aon-card-header"><h4><i className="fa fa-image"></i> Images de la galerie</h4></div>
