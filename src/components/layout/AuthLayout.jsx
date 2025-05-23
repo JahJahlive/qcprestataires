@@ -1,112 +1,91 @@
-import React, { useEffect } from 'react'
-import { Navigate, Outlet } from 'react-router-dom'
-import { useStateContext } from '../../context/ContextProvider'
-import HeaderAuth from '../HeaderAuth'
-import axiosClient from '../../axios-client'
-import { NavLink } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Navigate, Outlet, NavLink, useLocation } from 'react-router-dom';
+import { useStateContext } from '../../context/ContextProvider';
+import HeaderAuth from '../HeaderAuth';
+import axiosClient from '../../axios-client';
 
 export default function AuthLayout() {
-  const { token, setToken, setUser } = useStateContext()
+  const { token, setToken, setUser } = useStateContext();
+  const location = useLocation();
 
   if (!token) {
-    window.location.replace('/')
+    return <Navigate to="/" replace />;
   }
 
   useEffect(() => {
-    axiosClient.get('/user')
+    axiosClient
+      .get('/user')
       .then(({ data }) => {
-        setUser(data)
+        setUser(data);
       })
       .catch((error) => {
-        setUser({})
-        setToken(null)
-      })
-  }, [])
+        setUser({});
+        setToken(null);
+      });
+  }, []);
+
+  // List of routes for sidebar links
+  const navItems = [
+    { path: 'dashboard', icon: 'fa fa-dashboard', text: 'Accueil', exact: true },
+    { path: 'profil', icon: 'fa fa-user-circle-o', text: 'Profil' },
+    { path: 'services', icon: 'fa fa-cogs', text: 'Mes services' },
+    { path: 'reservations', icon: 'fa fa-calendar', text: 'Mes réservations' },
+    { path: 'equipes', icon: 'fa fa-users', text: "Membres de l'équipe" },
+    { path: 'heures_ouvertures', icon: 'fa fa-clock-o', text: "Heures d'ouverture" },
+    { path: 'carte_identite', icon: 'fa fa-id-card-o', text: "Télécharger une pièce d'identité" },
+    { path: 'abonnements', icon: 'fa fa-cloud-upload', text: 'Mettre à niveau le compte' },
+  ];
 
   return (
     <>
       <div className="page-wraper">
-          
-          <HeaderAuth />       
-        
-          {/* Sidebar Holder */}
-          <nav id="sidebar-admin-wraper">
-              <div className="pro-my-account-wrap">
-                
+        <HeaderAuth />
+
+        {/* Sidebar Holder */}
+        <nav id="sidebar-admin-wraper">
+          <div className="pro-my-account-wrap"></div>
+          <div className="admin-nav admin-nav-scroll" style={{ overflowY: 'auto' }}>
+            <ul className="">
+              {navItems.map((item) => (
+                <li
+                  key={item.path}
+                  className={
+                    item.exact
+                      ? location.pathname === `/${item.path}`
+                        ? 'active'
+                        : ''
+                      : location.pathname.includes(`/${item.path}`)
+                      ? 'active'
+                      : ''
+                  }
+                >
+                  <NavLink to={item.path} end={item.exact}>
+                    <i className={item.icon}></i>
+                    <span className="admin-nav-text">{item.text}</span>
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </nav>
+
+        {/* Page Content Holder */}
+        <div id="content">
+          <div className="content-admin-main">
+            <div className="admin-top-area d-flex flex-wrap justify-content-between m-b30 align-items-center">
+              <div className="admin-left-area">
+                <a
+                  className="nav-btn-admin d-flex justify-content-between align-items-center"
+                  id="sidebarCollapse"
+                >
+                  <span className="fa fa-reorder"></span>
+                </a>
               </div>
-              <div className="admin-nav admin-nav-scroll" style={{overflowY: 'auto'}}>
-
-                <div className="admin-nav admin-nav-scroll" style={{ overflowY: 'auto' }}>
-                  <ul className="">
-                    <li className="active">
-                      <NavLink to="dashboard">
-                        <i className="fa fa-dashboard"></i>
-                        <span className="admin-nav-text">Accueil</span>
-                      </NavLink>
-                    </li>
-                    <li>
-                      <NavLink to="profil">
-                        <i className="fa fa-user-circle-o"></i>
-                        <span className="admin-nav-text">Profil</span>
-                      </NavLink>
-                    </li>
-                    <li>
-                      <NavLink to="services">
-                        <i className="fa fa-cogs"></i>
-                        <span className="admin-nav-text">Mes services</span>
-                      </NavLink>
-                    </li>
-                    <li>
-                      <NavLink to="reservations">
-                        <i className="fa fa-calendar"></i>
-                        <span className="admin-nav-text">Mes réservations</span>
-                      </NavLink>
-                    </li>     
-                    <li>
-                      <NavLink to="equipes">
-                        <i className="fa fa-users"></i>
-                        <span className="admin-nav-text">Membres de l'équipe</span>
-                      </NavLink>
-                    </li>
-                    <li>
-                      <NavLink to="heures_ouvertures">
-                        <i className="fa fa-clock-o"></i>
-                        <span className="admin-nav-text">Heures d'ouverture</span>
-                      </NavLink>
-                    </li>
-                    <li>
-                      <NavLink to="carte_identite">
-                        <i className="fa fa-id-card-o"></i>
-                        <span className="admin-nav-text">Télécharger une pièce d'identité</span>
-                      </NavLink>
-                    </li>
-                    <li>
-                      <NavLink to="abonnements">
-                        <i className="fa fa-cloud-upload"></i>
-                        <span className="admin-nav-text">Mettre à niveau le compte</span>
-                      </NavLink>
-                    </li>
-                  </ul>
-                </div>
-              </div>   
-          </nav>
-
-          {/* Page Content Holder */}
-          <div id="content">
-
-              <div className="content-admin-main">
-                  
-                  <div className="admin-top-area d-flex flex-wrap justify-content-between m-b30 align-items-center">
-                    <div className="admin-left-area">
-                      <a className="nav-btn-admin d-flex justify-content-between align-items-center" id="sidebarCollapse">
-                          <span className="fa fa-reorder"></span>
-                      </a>
-                    </div>
-                  </div>
-                  <Outlet />
-              </div>
+            </div>
+            <Outlet />
+          </div>
         </div>
-      </div>    
+      </div>
     </>
-  )
+  );
 }
