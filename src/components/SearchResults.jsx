@@ -17,40 +17,67 @@ function SearchResults({ searchPayload }) {
     order: 'desc',
     perPage: 9,
   });
-  const [viewType, setViewType] = useState('listview');
+  const [viewType, setViewType] = useState('grid-2');
 
-  const fetchSearchResults = debounce(async () => {
+  const fetchSearchResults = debounce(async (page) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axiosClient.get('/providers', {
-        params: {
-          ...searchPayload,
-          page: pagination.currentPage,
-          order_by: filters.orderBy,
-          order: filters.order,
-          per_page: filters.perPage,
-        },
-      });
+      const params = {
+        ...searchPayload,
+        page,
+        order_by: filters.orderBy,
+        order: filters.order,
+        per_page: filters.perPage,
+      };
+      console.log('Fetching providers with params:', params); // Debug
+      const response = await axiosClient.get('/providers', { params });
+      console.log('API response:', response.data); // Debug
+      if (!Array.isArray(response.data.data)) {
+        throw new Error('Invalid providers data format');
+      }
       setProviders(response.data.data);
-      setPagination((prev) => ({
-        ...prev,
-        totalPages: response.data.last_page || 1,
-        currentPage: response.data.current_page || 1,
-      }));
       setTotalResults(response.data.total || 0);
+      setPagination((prev) => {
+        const newPagination = {
+          ...prev,
+          currentPage: page,
+          totalPages: response.data.last_page || 1,
+        };
+        console.log('Updated pagination:', newPagination); // Debug
+        return newPagination;
+      });
     } catch (error) {
-      console.error('Erreur lors de la récupération des résultats:', error);
-      setError('Une erreur est survenue lors de la recherche. Veuillez réessayer.');
+      console.error('Error fetching providers:', error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'Une erreur est survenue lors de la recherche. Veuillez réessayer.';
+      setError(errorMessage);
+      setProviders([]);
+      setTotalResults(0);
+      setPagination((prev) => ({ ...prev, currentPage: 1, totalPages: 1 }));
     } finally {
       setLoading(false);
     }
   }, 300);
 
   useEffect(() => {
-    fetchSearchResults();
-    return () => fetchSearchResults.cancel();
-  }, [searchPayload, filters, pagination.currentPage]);
+    console.log('searchPayload changed:', searchPayload); // Debug
+    // Reset currentPage to 1 and fetch results
+    setPagination((prev) => {
+      const newPagination = { ...prev, currentPage: 1 };
+      console.log('Reset pagination to page 1:', newPagination); // Debug
+      fetchSearchResults(1); // Fetch page 1 immediately
+      return newPagination;
+    });
+  }, [searchPayload]);
+
+  useEffect(() => {
+    // Fetch results when filters or currentPage change
+    console.log('Fetching due to filters or currentPage change:', { filters, currentPage: pagination.currentPage }); // Debug
+    fetchSearchResults(pagination.currentPage);
+  }, [filters, pagination.currentPage]);
 
   const handleFilterChange = (event) => {
     const { name, value } = event.target;
@@ -69,6 +96,15 @@ function SearchResults({ searchPayload }) {
     setPagination((prev) => ({ ...prev, currentPage: page }));
   };
 
+  const handleFavorite = async (providerId) => {
+    try {
+      console.log(`Adding provider ${providerId} to favorites`);
+      // TODO: Implement API call, e.g., await axiosClient.post('/favorites', { providerId });
+    } catch (error) {
+      console.error('Error adding favorite:', error);
+    }
+  };
+
   const getQuartiersByVille = (quartiers) => {
     const grouped = quartiers.reduce((acc, { ville, quartier }) => {
       if (!acc[ville.name]) {
@@ -82,6 +118,10 @@ function SearchResults({ searchPayload }) {
       .join(' | ');
   };
 
+  // Calculate results range for display
+  const startResult = providers.length > 0 ? (pagination.currentPage - 1) * filters.perPage + 1 : 0;
+  const endResult = Math.min(startResult + providers.length - 1, totalResults);
+
   const maxPagesToShow = 5;
   const startPage = Math.max(1, pagination.currentPage - Math.floor(maxPagesToShow / 2));
   const endPage = Math.min(pagination.totalPages, startPage + maxPagesToShow - 1);
@@ -89,12 +129,23 @@ function SearchResults({ searchPayload }) {
 
   return (
     <div className="aon-search-result-area mt-5">
-      {error && <div className="alert alert-danger">{error}</div>}
+      {error && (
+        <div className="alert alert-danger" id="error-message">
+          {error}
+          <button
+            type="button"
+            onClick={() => setError(null)}
+            className="btn btn-link"
+            aria-label="Fermer l'erreur"
+          >
+            Fermer
+          </button>
+        </div>
+      )}
       <div className="sf-search-result-top flex-wrap d-flex justify-content-between align-items-center">
         <div className="sf-search-result-title">
           <h5>
-            Affichage de {providers.length > 0 ? 1 : 0} –{' '}
-            {Math.min(filters.perPage, providers.length * pagination.currentPage)} sur {totalResults} résultats
+            Affichage de {startResult} – {endResult} sur {totalResults} résultats
           </h5>
         </div>
         <div className="sf-search-result-option">
@@ -176,14 +227,14 @@ function SearchResults({ searchPayload }) {
         </button>
       </div>
 
-      <div className={`row ${viewType === 'grid-2' ? 'row-cols-1 row-cols-sm-2' : 'row-cols-1'}`}>
+      <div className={`provider-grid ${viewType === 'grid-2' ? 'grid-2' : 'grid-1'}`}>
         {loading ? (
-          <div className="col-12 text-center">Chargement...</div>
+          <div className="text-center">Chargement...</div>
         ) : providers.length === 0 ? (
-          <div className="col-12 text-center">Aucun prestataire trouvé.</div>
+          <div className="text-center">Aucun prestataire trouvé.</div>
         ) : (
           providers.map((provider) => (
-            <div className="col" key={provider.id}>
+            <div className="provider-item" key={provider.id}>
               <div className="aon-vender-list-wrap3">
                 <div className="aon-vender-list-box3 d-flex">
                   <div

@@ -13763,3 +13763,16 @@ button.close { line-height: 12px; }
   -webkit-box-orient: vertical;
   margin-bottom: 10px; /* Espace sous la description */
 }
+
+
+.provider-grid.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem; /* Adjust gap as needed */
+}
+
+.provider-grid.grid-1 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axiosClient from '../axios-client';
 import { debounce } from 'lodash';
 
@@ -22,10 +22,6 @@ function SearchBar({ onSearch }) {
         quartiers: [],
         price_min: 10,
         price_max: 1000,
-        order_by: 'rating',
-        order: 'desc',
-        per_page: 9,
-        page: 1,
     });
 
     // Fetch villes from the backend
@@ -37,7 +33,7 @@ function SearchBar({ onSearch }) {
             }
             setVilles(data);
         } catch (error) {
-            setError('Erreur lors de la récupération des villes.');
+            setError(error.response?.data?.message || 'Erreur lors de la récupération des villes.');
             console.error('Error fetching villes:', error);
         }
     };
@@ -70,8 +66,8 @@ function SearchBar({ onSearch }) {
         setSearchPayload(payload);
     }, 300);
 
-    // Handle select input changes (category, ville, quartiers, etc.)
-    const handleSelectChange = (event) => {
+    // Handle select input changes
+    const handleSelectChange = useCallback((event) => {
         const { name, multiple } = event.target;
         const value = multiple
             ? Array.from(event.target.selectedOptions).map((option) => Number(option.value))
@@ -80,14 +76,12 @@ function SearchBar({ onSearch }) {
         let newPayload = { ...searchPayload, [name]: value };
 
         if (name === 'subcategory2') {
-            // Validate that subcategory2 belongs to the current subcategory
             if (value.length > 0) {
                 const validSubcategory2 = value.every((id) => {
                     const sub2 = subcategories2.find((s) => s.id === id);
                     return sub2 && sub2.parent_id === Number(searchPayload.subcategory);
                 });
                 if (!validSubcategory2) {
-                    // Update subcategory and category to match the first selected subcategory2
                     const firstSub2 = subcategories2.find((s) => s.id === value[0]);
                     if (firstSub2) {
                         newPayload.subcategory = firstSub2.parent_id;
@@ -97,38 +91,36 @@ function SearchBar({ onSearch }) {
                 }
             }
         } else if (name === 'subcategory') {
-            // Validate that the subcategory belongs to the current category
             if (value) {
                 const selectedSubcategory = subcategories.find((sub) => sub.id === value);
                 if (selectedSubcategory && selectedSubcategory.parent_id !== Number(searchPayload.category)) {
                     newPayload.category = selectedSubcategory.parent_id;
                 }
             }
-            newPayload.subcategory2 = []; // Clear subcategory2 when changing subcategory
+            newPayload.subcategory2 = [];
         } else if (name === 'category') {
-            // Clear subcategory and subcategory2 when changing category
             newPayload.subcategory = null;
             newPayload.subcategory2 = [];
         }
 
         setSearchPayload(newPayload);
-    };
+    }, [searchPayload, subcategories, subcategories2]);
 
-    // Handle text input changes (keyword)
+    // Handle text input changes
     const handleInputChange = (event) => {
         const { name, value } = event.target;
         debouncedSetSearchPayload({ ...searchPayload, [name]: value });
     };
 
-    // Handle price range changes with validation
-    const handlePriceChange = ([min, max]) => {
+    // Handle price range changes
+    const handlePriceChange = useCallback(([min, max]) => {
         const validatedMin = Math.max(0, Number(min));
         const validatedMax = Math.max(validatedMin, Number(max));
         setSearchPayload((prev) => ({ ...prev, price_min: validatedMin, price_max: validatedMax }));
-    };
+    }, []);
 
-    // Reset form to initial state
-    const handleReset = () => {
+    // Reset form
+    const handleReset = useCallback(() => {
         setSearchPayload({
             keyword: '',
             category: null,
@@ -138,15 +130,11 @@ function SearchBar({ onSearch }) {
             quartiers: [],
             price_min: 10,
             price_max: 1000,
-            order_by: 'rating',
-            order: 'desc',
-            per_page: 9,
-            page: 1,
         });
         setDisplaySubCategory(false);
         setDisplaySubCategory2(false);
         setError(null);
-    };
+    }, []);
 
     // Load categories and villes on mount
     useEffect(() => {
@@ -194,19 +182,10 @@ function SearchBar({ onSearch }) {
     }, [searchPayload.ville, villes]);
 
     // Trigger search on form submission
-    const handleSearch = async (event) => {
+    const handleSearch = (event) => {
         event.preventDefault();
-        try {
-            setError(null);
-            console.log('Search payload:', searchPayload); // For debugging
-            const response = await axiosClient.post('/providers', searchPayload);
-            onSearch(response.data);
-        } catch (error) {
-            const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Une erreur est survenue lors de la recherche.';
-            setError(errorMessage);
-            console.error('Search error:', error);
-            onSearch({ data: [], current_page: 1, last_page: 1, per_page: searchPayload.per_page, total: 0 });
-        }
+        setError(null);
+        onSearch(searchPayload);
     };
 
     if (loading) {
@@ -216,7 +195,7 @@ function SearchBar({ onSearch }) {
     return (
         <div className="sf-seach-vertical sf-search-bar-panel">
             {error && (
-                <div className="alert alert-danger">
+                <div className="alert alert-danger" id="error-message">
                     {error}
                     <button
                         type="button"
@@ -228,7 +207,7 @@ function SearchBar({ onSearch }) {
                     </button>
                 </div>
             )}
-            <form className="search-providers" onSubmit={handleSearch}>
+            <form className="search-providers" onSubmit={handleSearch} aria-describedby={error ? 'error-message' : undefined}>
                 <div className="sf-searchbar-box">
                     <ul className="sf-searchbar-area">
                         {/* Keyword Input */}
@@ -391,7 +370,7 @@ function SearchBar({ onSearch }) {
                         )}
 
                         {/* Price Range Inputs */}
-                        <li>
+                        {/* <li>
                             <div className="sf-search-title">
                                 <label>Prix</label>
                                 <span className="sf-search-icon">
@@ -424,7 +403,7 @@ function SearchBar({ onSearch }) {
                                     aria-label="Prix maximum"
                                 />
                             </div>
-                        </li>
+                        </li> */}
 
                         {/* Submit and Reset Buttons */}
                         <li>

@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import { useStateContext } from '../context/ContextProvider'
+import { Link } from 'react-router-dom';
 
 function Header() {
     const {user} = useStateContext();
@@ -12,10 +13,10 @@ function Header() {
             {/* Logo section start */}
             <div className="logo-header">
                 <div className="logo-header-inner logo-header-one">
-                <a href="index.html">
+                <Link to="/">
                     <h3 className='site-logo-has text-white'>WARAPS</h3>
                     <h3 className='site-logo-sticky'>WARAPS</h3>
-                </a>
+                </Link>
                 </div>
             </div>
             {/* Logo section End */}
