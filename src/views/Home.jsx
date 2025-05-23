@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react'
+import React, {useState, useEffect, useCallback} from 'react'
 import LoginModal from '../components/LoginModal'
 import Carousel from 'react-multi-carousel'
 import 'react-multi-carousel/lib/styles.css'
@@ -8,7 +8,47 @@ import axiosClient from "../axios-client"
 
 export default function Home() {
   const [categories, setCategories] = useState([])
+  const [villes, setVilles] = useState([]);
+  const [payload, setPayload] = useState({
+    category: null,
+    ville: null,
+  });
   
+  const onLogout = (ev) => {
+    ev.preventDefault()
+
+    axiosClient.post('/logout')
+      .then(() => {
+        setUser({})
+        setToken(null)
+      })
+  }
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setPayload((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    console.log('Payload:', payload);
+  };
+
+  const handleSearch = (payload) => {
+    console.log('Search: Handling search with payload:', payload);
+    const params = {};
+    if (payload.category) params.category = payload.category;
+    if (payload.ville) params.ville = payload.ville;
+
+    // Update URL parameters
+    const searchParams = new URLSearchParams();
+    if (params.category) searchParams.set('category', params.category);
+    if (params.ville) searchParams.set('ville', params.ville);
+    window.history.pushState({}, '', `/recherche?${searchParams.toString()}`);
+    console.log('Updated URL:', `/recherche?${searchParams.toString()}`);
+    // Optionally, you can also trigger a search function here
+
+  }
+
   const getCategories = () => {
     axiosClient.get('/categories')
     .then(({ data }) => {
@@ -18,6 +58,17 @@ export default function Home() {
     .catch((error) => {
     });
   }
+
+   const getVilles = useCallback(async () => {
+      try {
+        const { data } = await axiosClient.get('/villes');
+        if (!Array.isArray(data)) throw new Error('Invalid villes data format');
+        setVilles(data);
+      } catch (error) {
+        setError(error.response?.data?.message || 'Erreur lors de la récupération des villes.');
+        console.error('Error fetching villes:', error);
+      }
+    }, []);
   
   const responsive = {
     superLargeDesktop: {
@@ -41,6 +92,7 @@ export default function Home() {
 
   useEffect(() => {
     getCategories()
+    getVilles()
   }, [])
   
   return (
@@ -70,66 +122,35 @@ export default function Home() {
             <div className="container">
             {/* Search Form start */}
             <div className="search-form">
-                <form className="clearfix search-providers" method="get">
+                <form className="clearfix search-providers" method="get" onChange={handleSearch}>
                 <input type="hidden" name="s" value="" />
                 <div className="aon-searchbar-table">
                     <div className="aon-searchbar-left">
                     <ul className="clearfix sf-searchfileds-count-5">
                         <li>
-                          <label>Recherche</label>
-                          <input
-                            type="text"
-                            value=""
-                            placeholder="Recherche"
-                            id="keyword"
-                            name="keyword"
-                              className="form-control sf-form-control"
-                          />
-                          <span className="sf-search-icon">
-                            <img src="images/search-bar/keyword.png" alt="" />
-                          </span>
-                        </li>
-                        <li>
                         <label>Categories</label>
                         <select
+                            onChange={handleChange}
+                            value={payload.category}
                             id="categorysrh"
-                            name="catid"
-                            className="form-control sf-form-control aon-categories-select sf-select-box"
+                            name="category"
+                            className="form-control sf-form-control aon-categhories-select sf-select-bgox"
                             title="Select Category"
                         >
                             <option className="bs-title-option" value="">
                             Selectionner Une Categorie
                             </option>
-                            <option
-                            value="17"
-                            data-content="<img class='childcat-img' width='50' height='auto' src=images\cat-thum\cat-1.jpg><span class='childcat'>Cab Service</span>"
-                            >
-                            Cab Service
-                            </option>
-                            <option
-                            value="30"
-                            data-content="<img class='childcat-img' width='50' height='auto' src=images\cat-thum\cat-2.jpg><span class='childcat'>Car Dealers</span>"
-                            >
-                            Car Dealers
-                            </option>
-                            <option
-                            value="19"
-                            data-content="<img class='childcat-img' width='50' height='auto' src=images\cat-thum\cat-3.jpg><span class='childcat'>Food & Drink</span>"
-                            >
-                            Food & Drink
-                            </option>
-                            <option
-                            value="19"
-                            data-content="<img class='childcat-img' width='50' height='auto' src=images\cat-thum\cat-4.jpg><span class='childcat'>Plumber</span>"
-                            >
-                            Plomber
-                            </option>
-                            <option
-                            value="19"
-                            data-content="<img class='childcat-img' width='50' height='auto' src=images\cat-thum\cat-5.jpg><span class='childcat'>Electrician</span>"
-                            >
-                            Electricien
-                            </option>
+                            {categories.map((category) => (
+                                <option
+                                    key={category.id}
+                                    value={category.id}
+                                    data-content={`<img class='childcat-img' width='50' height='auto' src=${
+                                    category.image || 'images/cat-thum/default.jpg'
+                                    }><span class='childcat'>${category.name}</span>`}
+                                >
+                                    {category.name}
+                                </option>
+                                ))}         
                         </select>
                         <span className="sf-search-icon">
                             <img src="images/search-bar/maintenance.png" alt="" />
@@ -138,18 +159,22 @@ export default function Home() {
                         <li>
                         <label>Ville</label>
                         <select
-                            className="sf-select-box form-control sf-form-control"
+                         onChange={handleChange}
+                         value={payload.ville}
+                            className="sf-select-bohx form-control sf-form-control"
                             data-live-search="true"
                             required
-                            name="city"
+                            name="ville"
                             id="city"
                             title="Ville"
                            // data-header="Select a City"
                         >
                             <option value="">Select Ville</option>
-                            <option value="">London</option>
-                            <option value="">Japan</option>
-                            <option value="">US</option>
+                            {villes.map((ville) => (
+                  <option key={ville.id} value={ville.id}>
+                    {ville.name}
+                  </option>
+                ))}
                         </select>
                         <span className="sf-search-icon">
                             <img src="images/search-bar/city.png" alt="" />
@@ -158,7 +183,7 @@ export default function Home() {
                     </ul>
                     </div>
                     <div className="aon-searchbar-right">
-                    <button type="button" className="site-button text-white sf-search-btn">
+                    <button type="submit" className="site-button text-white sf-search-btn">
                         <i className="fa fa-search"></i> Recherchez
                     </button>
                     </div>

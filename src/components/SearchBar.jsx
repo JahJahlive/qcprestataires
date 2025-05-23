@@ -367,36 +367,6 @@ function SearchBar({ onSearch, initialPayload }) {
                 </select>
               </li>
             )}
-            {/* <li>
-              <div className="sf-search-title">
-                <label>Prix</label>
-                <span className="sf-search-icon">
-                  <img src="images/search-bar/price.png" alt="Icône de prix" />
-                </span>
-              </div>
-              <div className="price-range-inputs">
-                <input
-                  type="number"
-                  name="price_min"
-                  value={searchPayload.price_min}
-                  onChange={(e) => handlePriceChange([Number(e.target.value), searchPayload.price_max])}
-                  placeholder="Min"
-                  className="form-control sf-form-control"
-                  min="0"
-                  aria-label="Prix minimum"
-                />
-                <input
-                  type="number"
-                  name="price_max"
-                  value={searchPayload.price_max}
-                  onChange={(e) => handlePriceChange([searchPayload.price_min, Number(e.target.value)])}
-                  placeholder="Max"
-                  className="form-control sf-form-control mt-2"
-                  min="0"
-                  aria-label="Prix maximum"
-                />
-              </div>
-            </li> */}
             <li>
               <button
                 type="submit"

@@ -274,7 +274,7 @@ function SearchResults({ searchPayload }) {
               </div>
               <button
                 className="no-results-btn site-button"
-                onClick={() => navigate('/recherche', { state: { reset: true } })}
+                onClick={() => window.location.assign('/recherche')}
                 aria-label="Réinitialiser la recherche"
               >
                 Réinitialiser la recherche

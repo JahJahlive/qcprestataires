@@ -1,14 +1,27 @@
 import React, { useEffect } from 'react'
 import { useStateContext } from '../context/ContextProvider'
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import axiosClient from '../axios-client';
 
 function Header() {
-    const {user} = useStateContext();
+    const {user, setUser, setToken} = useStateContext();
     const location = useLocation();
+    const navigate = useNavigate();
 
     if (location.pathname === '/recherche' && location.state?.reset) {
         console.log('Header: Clearing URL parameters for reset');
         // Clear URL parameters if needed
+    }
+
+    const onLogout = (ev) => {
+      ev.preventDefault()
+  
+      axiosClient.post('/logout')
+        .then(() => {
+          setUser({})
+          setToken(null)
+          navigate('/');
+        })
     }
 
   return (
@@ -55,21 +68,40 @@ function Header() {
                 {/* Login */}
               
               {
-                (Object.keys(user).length === 0) && 
-                    <button
+                (Object.keys(user).length === 0) ?
+
+                (
+                  <button
                     type="button"
                     className="site-button aon-btn-login text-white"
                     data-toggle="modal"
                     data-target="#login-signup-model"
-                >
+                  >
                     <i className="fa fa-user"></i> Connexion
-                </button>
+                  </button>
+                )
+                :
+                (
+                  <div className="d-flex align-items-center justify-content-center gap-2">
+                   
+                    <div className="mx-2" style={{color: 'darkblue', fontSize: '25px', cursor: 'pointer'}} onClick={() => navigate('/dashboard')}>
+                      <i className="fa fa-user "></i> 
+                    </div>
+                    <div className="mx-2" style={{color: 'darkblue', fontSize: '25px', cursor: 'pointer'}} onClick={onLogout}>
+                      <i className="feather-log-out "></i> 
+                    </div>
+                  </div>
+                )
               }  
                 
-                {/* Sign up */}
-                <a href="mc-profile.html" className="site-button aon-btn-signup m-l20 text-white">
-                    <i className="fa fa-plus"></i> Faites une reservation
-                </a>
+                {
+                    (location.pathname !== '/') && (
+                        <Link to='/' className="site-button aon-btn-signup  text-white">
+                    <i className="fa fa-home"></i> Retour a l'accueil
+                </Link>
+                    )
+                }
+                
                 </div>
             </div>
             </div>
