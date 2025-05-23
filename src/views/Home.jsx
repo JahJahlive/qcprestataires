@@ -83,6 +83,28 @@ export default function Home() {
   useEffect(() => {
     getCategories()
     getVilles()
+
+    jQuery('.aon-featurd-provider-carousel').owlCarousel({
+        loop:true,
+        margin:20,
+        nav:true,
+        dots: false,
+        navText: ['<span class="ar-left"></span>', '<span class="ar-right"></span>'],
+        responsive:{
+            0:{
+                items:1
+            },
+            767:{
+                items:2
+            },			
+            1000:{
+                items:2
+            },
+            1200:{
+                items:3
+            }
+        }
+    });    
   }, [])
   
   return (
