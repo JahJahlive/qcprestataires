@@ -13,16 +13,6 @@ export default function Home() {
     category: null,
     ville: null,
   });
-  
-  const onLogout = (ev) => {
-    ev.preventDefault()
-
-    axiosClient.post('/logout')
-      .then(() => {
-        setUser({})
-        setToken(null)
-      })
-  }
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -163,7 +153,7 @@ export default function Home() {
                          value={payload.ville}
                             className="sf-select-bohx form-control sf-form-control"
                             data-live-search="true"
-                            required
+                            
                             name="ville"
                             id="city"
                             title="Ville"

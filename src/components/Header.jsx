@@ -2,6 +2,7 @@ import React, { useEffect } from 'react'
 import { useStateContext } from '../context/ContextProvider'
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import axiosClient from '../axios-client';
+import _ from 'lodash';
 
 function Header() {
     const {user, setUser, setToken} = useStateContext();
@@ -21,6 +22,7 @@ function Header() {
           setUser({})
           setToken(null)
           navigate('/');
+          toastr.success('Deconnexion Reussie')
         })
     }
 
@@ -64,23 +66,25 @@ function Header() {
 
             {/* Header Right Section */}
             <div className="extra-nav header-2-nav">
-                <div className="extra-cell">
+                <div className="d-flex gap-3">
                 {/* Login */}
               
               {
-                (Object.keys(user).length === 0) ?
+                _.isEmpty(user) &&  (location.pathname === '/') &&
 
                 (
-                  <button
-                    type="button"
-                    className="site-button aon-btn-login text-white"
+                  <div
+                    className="site-buttdon aon-btn-logein mx-1"
+                    style={{fontSize: '25px', cursor: 'pointer', color: 'red'}}
                     data-toggle="modal"
                     data-target="#login-signup-model"
                   >
-                    <i className="fa fa-user"></i> Connexion
-                  </button>
+                    <i className="fa fa-user"></i> 
+                  </div>
                 )
-                :
+              }
+              {
+                !_.isEmpty(user) &&  (location.pathname === '/') &&
                 (
                   <div className="d-flex align-items-center justify-content-center gap-2">
                    
@@ -96,9 +100,9 @@ function Header() {
                 
                 {
                     (location.pathname !== '/') && (
-                        <Link to='/' className="site-button aon-btn-signup  text-white">
-                    <i className="fa fa-home"></i> Retour a l'accueil
-                </Link>
+                      <Link to='/' className="site-button aon-btn-signup  text-white">
+                        <i className="fa fa-home"></i> 
+                      </Link>
                     )
                 }
                 

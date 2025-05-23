@@ -52,7 +52,7 @@ function LoginModal() {
       role: '',
     });
     setError(null);
-    setActiveTab('signup'); // Reset to default tab
+    setActiveTab('login'); // Reset to default tab
   };
 
   // Close modal and remove backdrop
@@ -141,6 +141,8 @@ function LoginModal() {
       setToken(response.data.token);
       resetModal(); // Reset modal state
       closeModal(); // Close modal and remove backdrop
+      
+      toastr.success('Connexion Reussie')
       navigate('/dashboard'); // Navigate to dashboard
     } catch (err) {
       setError(err.response?.data?.message || 'Connexion échouée');
@@ -177,7 +179,7 @@ function LoginModal() {
     <div className="modal fade" id="login-signup-model" tabIndex="-1" aria-labelledby="login-signup-model-label" aria-hidden="true">
       <div className="modal-dialog">
         <div className="modal-content">
-          <button type="button" className="btn-close aon-login-close" data-bs-dismiss="modal" aria-label="Close">
+          <button type="button" className="btn-close aon-login-close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">×</span>
           </button>
           <div className="modal-body">
@@ -186,18 +188,18 @@ function LoginModal() {
               <ul className="nav nav-tabs nav-table-cell">
                 <li>
                   <a
+                  style={{ cursor: 'pointer' }}
                     className={activeTab === 'login' ? 'active' : ''}
                     onClick={() => setActiveTab('login')}
-                    href="#Upcoming"
                   >
                     Connexion
                   </a>
                 </li>
                 <li>
                   <a
+                    style={{ cursor: 'pointer' }}
                     className={activeTab === 'signup' ? 'active' : ''}
                     onClick={() => setActiveTab('signup')}
-                    href="#Past"
                   >
                     Inscription
                   </a>

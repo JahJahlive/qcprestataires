@@ -8,7 +8,7 @@ export default function AuthLayout() {
   const {token, setToken, setUser} = useStateContext()
 
   if (!token) {
-    return <Navigate to="/" />
+    window.location.replace('/');
   }
 
   useEffect(() => {
