@@ -27,6 +27,25 @@ function SearchBar({ onSearch, initialPayload }) {
     price_max: initialPayload.price_max || 1000,
   });
 
+  // Sync internal searchPayload with initialPayload changes
+  useEffect(() => {
+    console.log('SearchBar: Syncing with initialPayload:', initialPayload);
+    setSearchPayload({
+      keyword: initialPayload.keyword || '',
+      category: initialPayload.category || null,
+      subcategory: initialPayload.subcategory || null,
+      subcategory2: Array.isArray(initialPayload.subcategory2)
+        ? initialPayload.subcategory2
+        : initialPayload.subcategory2
+        ? [Number(initialPayload.subcategory2)]
+        : [],
+      ville: initialPayload.ville || null,
+      quartiers: initialPayload.quartiers || [],
+      price_min: initialPayload.price_min || 10,
+      price_max: initialPayload.price_max || 1000,
+    });
+  }, [initialPayload]);
+
   // Trigger initial search only once on mount
   useEffect(() => {
     console.log('SearchBar: Triggering initial search with:', initialPayload);
@@ -73,11 +92,11 @@ function SearchBar({ onSearch, initialPayload }) {
   // Update dropdown visibility
   useEffect(() => {
     const selectedCategory = categories.find((cat) => cat.id === Number(searchPayload.category));
-    setDisplaySubCategory(!!(selectedCategory?.children?.length)); // Show if category has children
+    setDisplaySubCategory(!!(selectedCategory?.children?.length));
     const selectedSubCategory = subcategories.find(
       (sub) => sub.id === Number(searchPayload.subcategory),
     );
-    setDisplaySubCategory2(!!(selectedSubCategory?.children?.length)); // Show if subcategory has children
+    setDisplaySubCategory2(!!(selectedSubCategory?.children?.length));
   }, [searchPayload.category, searchPayload.subcategory, categories, subcategories]);
 
   // Update quartiers based on ville
@@ -95,13 +114,10 @@ function SearchBar({ onSearch, initialPayload }) {
       const { name, multiple } = event.target;
       let value;
       if (name === 'subcategory2') {
-        // Handle subcategory2 as single-select, store as array
         value = event.target.value ? [Number(event.target.value)] : [];
       } else if (multiple) {
-        // Handle other multiple selects (e.g., quartiers)
         value = Array.from(event.target.selectedOptions).map((opt) => Number(opt.value));
       } else {
-        // Handle single selects (e.g., category, subcategory, ville)
         value = event.target.value ? Number(event.target.value) : null;
       }
 
@@ -282,7 +298,7 @@ function SearchBar({ onSearch, initialPayload }) {
                   id="subcategory2srh"
                   name="subcategory2"
                   onChange={handleSelectChange}
-                  value={searchPayload.subcategory2[0] || ''} // Use first item for single-select
+                  value={searchPayload.subcategory2[0] || ''}
                   className="form-control sf-form-control aon-categories-select mt-3"
                   aria-label="Sélectionner un service"
                 >
@@ -339,11 +355,10 @@ function SearchBar({ onSearch, initialPayload }) {
                   name="quartiers"
                   multiple
                   onChange={handleSelectChange}
-                  value={searchPayload.quartiers.map(String)} // Convert numbers to strings for select
+                  value={searchPayload.quartiers.map(String)}
                   className="form-control sf-form-control mt-3"
                   aria-label="Sélectionner des quartiers"
                 >
-                    <option value="">Sélectionner des quartiers</option>
                   {quartiers.map((quartier) => (
                     <option key={quartier.id} value={quartier.id}>
                       {quartier.name}
@@ -352,7 +367,7 @@ function SearchBar({ onSearch, initialPayload }) {
                 </select>
               </li>
             )}
-            <li>
+            {/* <li>
               <div className="sf-search-title">
                 <label>Prix</label>
                 <span className="sf-search-icon">
@@ -381,7 +396,7 @@ function SearchBar({ onSearch, initialPayload }) {
                   aria-label="Prix maximum"
                 />
               </div>
-            </li>
+            </li> */}
             <li>
               <button
                 type="submit"

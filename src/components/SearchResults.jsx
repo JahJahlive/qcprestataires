@@ -1,8 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axiosClient from '../axios-client';
 import { debounce } from 'lodash';
+import { motion, AnimatePresence } from 'framer-motion';
 
 function SearchResults({ searchPayload }) {
+  const navigate = useNavigate();
   const [providers, setProviders] = useState([]);
   const [totalResults, setTotalResults] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -30,7 +33,6 @@ function SearchResults({ searchPayload }) {
           order_by: filters.orderBy,
           order: filters.order,
           per_page: filters.perPage,
-          // Send arrays as-is, axios will handle array serialization
           subcategory2: searchPayload.subcategory2?.length ? searchPayload.subcategory2 : undefined,
           quartiers: searchPayload.quartiers?.length ? searchPayload.quartiers : undefined,
         };
@@ -64,14 +66,12 @@ function SearchResults({ searchPayload }) {
     [searchPayload, filters],
   );
 
-  // Fetch results when searchPayload or filters change
   useEffect(() => {
     console.log('SearchResults: searchPayload changed:', searchPayload);
     setPagination((prev) => ({ ...prev, currentPage: 1 }));
     fetchSearchResults(1);
   }, [searchPayload, filters, fetchSearchResults]);
 
-  // Fetch results when currentPage changes
   useEffect(() => {
     if (pagination.currentPage !== 1) {
       console.log('SearchResults: Fetching page:', pagination.currentPage);
@@ -125,12 +125,23 @@ function SearchResults({ searchPayload }) {
   return (
     <div className="aon-search-result-area mt-5">
       {error && (
-        <div className="alert alert-danger" id="error-message">
+        <motion.div
+          className="alert alert-danger"
+          id="error-message"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+        >
           {error}
-          <button type="button" onClick={() => setError(null)} className="btn btn-link" aria-label="Fermer l'erreur">
+          <button
+            type="button"
+            onClick={() => setError(null)}
+            className="btn btn-link"
+            aria-label="Fermer l'erreur"
+          >
             Fermer
           </button>
-        </div>
+        </motion.div>
       )}
       <div className="sf-search-result-top flex-wrap d-flex justify-content-between align-items-center">
         <div className="sf-search-result-title">
@@ -221,14 +232,64 @@ function SearchResults({ searchPayload }) {
       </div>
       <div className={`provider-grid ${viewType === 'grid-2' ? 'grid-2' : 'grid-1'}`}>
         {loading ? (
-          <div className="text-center">Chargement des résultats...</div>
+          <motion.div
+            className="text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <i className="fa fa-spinner fa-spin" aria-hidden="true"></i> Chargement des résultats...
+          </motion.div>
         ) : error ? (
-          <div className="text-center text-danger">{error}</div>
+          <motion.div
+            className="text-center text-danger"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            {error}
+          </motion.div>
         ) : providers.length === 0 ? (
-          <div className="text-center">Aucun prestataire trouvé pour ces critères.</div>
+          <motion.div
+            className="no-results-container"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="no-results-card">
+              <i className="fa fa-search no-results-icon" aria-hidden="true"></i>
+              <h3 className="no-results-title">Aucun prestataire trouvé</h3>
+              <p className="no-results-message">
+                Désolé, aucun prestataire ne correspond à vos critères de recherche. Essayez d'élargir vos filtres pour découvrir plus d'options !
+              </p>
+              <div className="no-results-suggestions">
+                <p><strong>Suggestions :</strong></p>
+                <ul>
+                  <li>Supprimez certains filtres, comme les quartiers spécifiques.</li>
+                  <li>Choisissez une catégorie ou sous-catégorie plus générale.</li>
+                  <li>Augmentez la plage de prix.</li>
+                  <li>Vérifiez l'orthographe des mots-clés.</li>
+                </ul>
+              </div>
+              <button
+                className="no-results-btn site-button"
+                onClick={() => navigate('/recherche', { state: { reset: true } })}
+                aria-label="Réinitialiser la recherche"
+              >
+                Réinitialiser la recherche
+              </button>
+            </div>
+          </motion.div>
         ) : (
           providers.map((provider) => (
-            <div className="provider-item" key={provider.id}>
+            <motion.div
+              className="provider-item"
+              key={provider.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
               <div className="aon-vender-list-wrap3">
                 <div className="aon-vender-list-box3 d-flex">
                   <div
@@ -295,7 +356,7 @@ function SearchResults({ searchPayload }) {
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))
         )}
       </div>

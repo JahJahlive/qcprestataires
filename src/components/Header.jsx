@@ -1,9 +1,15 @@
 import React, { useEffect } from 'react'
 import { useStateContext } from '../context/ContextProvider'
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 function Header() {
     const {user} = useStateContext();
+    const location = useLocation();
+
+    if (location.pathname === '/recherche' && location.state?.reset) {
+        console.log('Header: Clearing URL parameters for reset');
+        // Clear URL parameters if needed
+    }
 
   return (
     <header className="site-header header-style-1 mobile-sider-drawer-menu header-full-width">
@@ -14,7 +20,7 @@ function Header() {
             <div className="logo-header">
                 <div className="logo-header-inner logo-header-one">
                 <Link to="/">
-                    <h3 className='site-logo-has text-white'>WARAPS</h3>
+                    <h3 className={`site-logo-has ${(location.pathname !== '/recherche') && 'text-white'}`}>WARAPS</h3>
                     <h3 className='site-logo-sticky'>WARAPS</h3>
                 </Link>
                 </div>
