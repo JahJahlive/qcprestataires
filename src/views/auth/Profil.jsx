@@ -3,10 +3,10 @@ import React, { useState, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { useDropzone } from 'react-dropzone';
 import { GoogleMap, LoadScript, Marker, Autocomplete } from '@react-google-maps/api';
-import { GOOGLE_MAPS_API_KEY } from '../../config'; // Import from config.js
+import Select from 'react-select';
 
 function Profile() {
-  // State for all form sections
+  // State declarations
   const [formData, setFormData] = useState({
     username: '',
     companyName: '',
@@ -18,22 +18,15 @@ function Profile() {
     mobile: '',
     alternateMobile: '',
     email: '',
-    skype: '',
-    website: '',
     address: '',
     apartment: '',
     city: '',
     state: '',
     postalCode: '',
     country: '',
-    latitude: 4.051056, // Default coordinates (Douala, Cameroon)
-    longitude: 9.767868,
+    latitude: 4.058624677411845, // Default coordinates (Douala, Cameroon)
+    longitude: 9.71139907836914,
     facebook: '',
-    twitter: '',
-    linkedin: '',
-    pinterest: '',
-    digg: '',
-    instagram: '',
     newPassword: '',
     confirmPassword: '',
     categories: [],
@@ -42,21 +35,42 @@ function Profile() {
     videoUrl: '',
   });
 
-  // State for file uploads
   const [avatar, setAvatar] = useState(null);
   const [coverImage, setCoverImage] = useState(null);
   const [galleryFiles, setGalleryFiles] = useState([]);
-
-  // State for loading and errors
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-
-  // State for Autocomplete instance
   const [autocomplete, setAutocomplete] = useState(null);
+  const [mapZoom, setMapZoom] = useState(13); // Default zoom level
+  const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false); // Track API load
 
-  // State for map zoom level
-  const [mapZoom, setMapZoom] = useState(15); // Default zoom level
+  const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+
+  // Define bounds for Douala, Yaoundé, and Bafoussam
+  const bounds = {
+    south: 3.8, // Southwest of Douala/Yaoundé
+    west: 9.7,
+    north: 5.5, // Northeast of Bafoussam/Yaoundé
+    east: 11.6,
+  };
+
+  // Autocomplete options (computed dynamically)
+  const autocompleteOptions = useMemo(() => {
+    if (!isGoogleMapsLoaded || !window.google || !window.google.maps) {
+      return {
+        componentRestrictions: { country: 'cm' }, // Fallback without bounds
+      };
+    }
+    return {
+      componentRestrictions: { country: 'cm' }, // Restrict to Cameroon
+      bounds: new window.google.maps.LatLngBounds(
+        new window.google.maps.LatLng(bounds.south, bounds.west),
+        new window.google.maps.LatLng(bounds.north, bounds.east)
+      ),
+      strictBounds: true, // Enforce results within bounds
+    };
+  }, [isGoogleMapsLoaded, bounds]);
 
   // Handle text input changes
   const handleInputChange = (e) => {
@@ -72,9 +86,9 @@ function Profile() {
     }
   };
 
-  // Handle select multiple (categories, amenities)
+  // Handle select multiple (categories, amenities) with react-select
   const handleSelectChange = (name, selectedOptions) => {
-    const values = Array.from(selectedOptions).map((option) => option.value);
+    const values = selectedOptions ? selectedOptions.map((option) => option.value) : [];
     setFormData((prev) => ({ ...prev, [name]: values }));
   };
 
@@ -88,7 +102,11 @@ function Profile() {
 
   // Handle gallery files with react-dropzone
   const { getRootProps, getInputProps } = useDropzone({
-    accept: 'image/jpeg,image/png,image/gif',
+    accept: {
+      'image/jpeg': ['.jpeg', '.jpg'],
+      'image/png': ['.png'],
+      'image/gif': ['.gif'],
+    },
     onDrop: (acceptedFiles) => {
       setGalleryFiles((prev) => [...prev, ...acceptedFiles]);
     },
@@ -181,7 +199,7 @@ function Profile() {
         const response = await fetch(
           `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
             fullAddress
-          )}&key=${GOOGLE_MAPS_API_KEY}`
+          )}&key=${GOOGLE_MAPS_API_KEY}&components=country:CM`
         );
         const data = await response.json();
 
@@ -285,7 +303,6 @@ function Profile() {
       const response = await axios.post('http://your-laravel-api.com/api/profile/update', data, {
         headers: {
           'Content-Type': 'multipart/form-data',
-          // Add authorization header if needed, e.g., 'Authorization': `Bearer ${token}`
         },
       });
 
@@ -323,7 +340,7 @@ function Profile() {
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
         center={center}
-        zoom={mapZoom} // Use configurable zoom
+        zoom={mapZoom}
         onClick={handleMarkerDragEnd}
       >
         <Marker position={center} draggable={true} onDragEnd={handleMarkerDragEnd} />
@@ -332,18 +349,25 @@ function Profile() {
     [center, mapZoom, handleMarkerDragEnd]
   );
 
-  // Check for missing API key
+  // Options for categories and amenities
+  const categoryOptions = [
+    { value: 'laundry', label: 'Blanchisserie' },
+    { value: 'taxi', label: 'Services de taxi' },
+    { value: 'car_dealer', label: 'Concessionnaire automobile' },
+    { value: 'event_organizer', label: 'Organisateur d\'événements' },
+  ];
+
   if (!GOOGLE_MAPS_API_KEY) {
     return (
       <div className="alert alert-danger">
         Erreur : La clé API Google Maps n'est pas configurée. Veuillez ajouter
-        REACT_APP_GOOGLE_MAPS_API_KEY ou VITE_GOOGLE_MAPS_API_KEY dans le fichier .env et redémarrer le serveur.
+        VITE_GOOGLE_MAPS_API_KEY dans le fichier .env et redémarrer le serveur.
       </div>
     );
   }
 
   return (
-    <React.Fragment>
+    <>
       <div className="aon-provi-tabs d-flex flex-wrap justify-content-between">
         <div className="aon-provi-left">
           <ul className="aon-provi-links">
@@ -627,38 +651,7 @@ function Profile() {
                   </div>
                 </div>
               </div>
-              <div className="col-md-6">
-                <div className="form-group">
-                  <label htmlFor="skype">Skype</label>
-                  <div className="aon-inputicon-box">
-                    <input
-                      id="skype"
-                      className="form-control sf-form-control"
-                      name="skype"
-                      type="text"
-                      value={formData.skype}
-                      onChange={handleInputChange}
-                    />
-                    <i className="aon-input-icon fa fa-skype"></i>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-6">
-                <div className="form-group">
-                  <label htmlFor="website">Site web</label>
-                  <div className="aon-inputicon-box">
-                    <input
-                      id="website"
-                      className="form-control sf-form-control"
-                      name="website"
-                      type="url"
-                      value={formData.website}
-                      onChange={handleInputChange}
-                    />
-                    <i className="aon-input-icon fa fa-globe"></i>
-                  </div>
-                </div>
-              </div>
+            
             </div>
           </div>
         </div>
@@ -675,19 +668,21 @@ function Profile() {
               <div className="col-md-12">
                 <div className="form-group">
                   <label>Emplacement</label>
-                  <div className="grayscle-area address-area-map">
+                  <div className="address-area-map">
                     <LoadScript
                       googleMapsApiKey={GOOGLE_MAPS_API_KEY}
-                      libraries={['places']} // Required for Autocomplete
+                      libraries={['places']}
+                      onLoad={() => setIsGoogleMapsLoaded(true)} // Set flag when API loads
                     >
                       <Autocomplete
                         onLoad={(auto) => setAutocomplete(auto)}
                         onPlaceChanged={handlePlaceSelected}
+                        options={autocompleteOptions}
                       >
                         <input
                           type="text"
                           className="form-control mb-3"
-                          placeholder="Rechercher une adresse"
+                          placeholder="Rechercher une adresse à Douala, Yaoundé ou Bafoussam"
                           aria-label="Rechercher une adresse"
                         />
                       </Autocomplete>
@@ -715,9 +710,8 @@ function Profile() {
                     Trouver l'adresse sur la carte
                   </button>
                   <p>
-                    Remarque : Cliquez ou déplacez le marqueur sur la carte pour définir l'adresse,
-                    utilisez la barre de recherche pour trouver une adresse, ou entrez l'adresse et
-                    cliquez sur "Trouver l'adresse" pour mettre à jour la carte.
+                    Remarque : Recherchez des adresses uniquement à Douala, Yaoundé ou Bafoussam.
+                    Déplacez le marqueur ou entrez l'adresse et cliquez sur "Trouver l'adresse".
                   </p>
                 </div>
               </div>
@@ -878,86 +872,6 @@ function Profile() {
                   </div>
                 </div>
               </div>
-              <div className="col-md-6">
-                <div className="form-group">
-                  <label htmlFor="twitter">Twitter</label>
-                  <div className="aon-inputicon-box">
-                    <input
-                      id="twitter"
-                      className="form-control sf-form-control"
-                      name="twitter"
-                      type="url"
-                      value={formData.twitter}
-                      onChange={handleInputChange}
-                    />
-                    <i className="aon-input-icon fa fa-twitter"></i>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-6">
-                <div className="form-group">
-                  <label htmlFor="linkedin">LinkedIn</label>
-                  <div className="aon-inputicon-box">
-                    <input
-                      id="linkedin"
-                      className="form-control sf-form-control"
-                      name="linkedin"
-                      type="url"
-                      value={formData.linkedin}
-                      onChange={handleInputChange}
-                    />
-                    <i className="aon-input-icon fa fa-linkedin"></i>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-6">
-                <div className="form-group">
-                  <label htmlFor="pinterest">Pinterest</label>
-                  <div className="aon-inputicon-box">
-                    <input
-                      id="pinterest"
-                      className="form-control sf-form-control"
-                      name="pinterest"
-                      type="url"
-                      value={formData.pinterest}
-                      onChange={handleInputChange}
-                    />
-                    <i className="aon-input-icon fa fa-pinterest"></i>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-6">
-                <div className="form-group">
-                  <label htmlFor="digg">Digg</label>
-                  <div className="aon-inputicon-box">
-                    <input
-                      id="digg"
-                      className="form-control sf-form-control"
-                      name="digg"
-                      type="url"
-                      value={formData.digg}
-                      onChange={handleInputChange}
-                    />
-                    <i className="aon-input-icon fa fa-digg"></i>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-6">
-                <div className="form-group">
-                  <label htmlFor="instagram">Instagram</label>
-                  <div className="aon-inputicon-box">
-                    <input
-                      id="instagram"
-                      className="form-control sf-form-control"
-                      name="instagram"
-                      type="url"
-                      value={formData.instagram}
-                      onChange={handleInputChange}
-                    />
-                    <i className="aon-input-icon fa fa-instagram"></i>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -1027,69 +941,36 @@ function Profile() {
                     Actuellement, vous pouvez choisir 10 catégories. Vous pouvez augmenter ce nombre
                     en mettant à niveau votre plan d'adhésion.
                   </div>
-                  <select
-                    className="selectpicker"
-                    multiple
-                    data-live-search="true"
+                  <Select
+                    isMulti
                     name="categories"
-                    value={formData.categories}
-                    onChange={(e) => handleSelectChange('categories', e.target.selectedOptions)}
-                  >
-                    <option value="laundry">Blanchisserie</option>
-                    <option value="taxi">Services de taxi</option>
-                    <option value="car_dealer">Concessionnaire automobile</option>
-                    <option value="event_organizer">Organisateur d'événements</option>
-                  </select>
+                    options={categoryOptions}
+                    className="basic-multi-select"
+                    classNamePrefix="select"
+                    value={categoryOptions.filter((option) =>
+                      formData.categories.includes(option.value)
+                    )}
+                    onChange={(selected) => handleSelectChange('categories', selected)}
+                  />
                 </div>
               </div>
               <div className="col-md-12">
                 <div className="form-group">
                   <label>Catégorie principale</label>
                   <div className="radio-inline-box">
-                    <div className="checkbox sf-radio-checkbox">
-                      <input
-                        id="mainCategoryLaundry"
-                        name="mainCategory"
-                        value="laundry"
-                        type="radio"
-                        checked={formData.mainCategory === 'laundry'}
-                        onChange={handleInputChange}
-                      />
-                      <label htmlFor="mainCategoryLaundry">Blanchisserie</label>
-                    </div>
-                    <div className="checkbox sf-radio-checkbox">
-                      <input
-                        id="mainCategoryTaxi"
-                        name="mainCategory"
-                        value="taxi"
-                        type="radio"
-                        checked={formData.mainCategory === 'taxi'}
-                        onChange={handleInputChange}
-                      />
-                      <label htmlFor="mainCategoryTaxi">Services de taxi</label>
-                    </div>
-                    <div className="checkbox sf-radio-checkbox">
-                      <input
-                        id="mainCategoryCarDealer"
-                        name="mainCategory"
-                        value="car_dealer"
-                        type="radio"
-                        checked={formData.mainCategory === 'car_dealer'}
-                        onChange={handleInputChange}
-                      />
-                      <label htmlFor="mainCategoryCarDealer">Concessionnaire automobile</label>
-                    </div>
-                    <div className="checkbox sf-radio-checkbox">
-                      <input
-                        id="mainCategoryEventOrganizer"
-                        name="mainCategory"
-                        value="event_organizer"
-                        type="radio"
-                        checked={formData.mainCategory === 'event_organizer'}
-                        onChange={handleInputChange}
-                      />
-                      <label htmlFor="mainCategoryEventOrganizer">Organisateur d'événements</label>
-                    </div>
+                    {categoryOptions.map((option) => (
+                      <div key={option.value} className="checkbox sf-radio-checkbox">
+                        <input
+                          id={`mainCategory${option.value}`}
+                          name="mainCategory"
+                          value={option.value}
+                          type="radio"
+                          checked={formData.mainCategory === option.value}
+                          onChange={handleInputChange}
+                        />
+                        <label htmlFor={`mainCategory${option.value}`}>{option.label}</label>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -1109,19 +990,17 @@ function Profile() {
               <div className="col-md-12">
                 <div className="form-group">
                   <label>Équipements</label>
-                  <select
-                    className="selectpicker"
-                    multiple
-                    data-live-search="true"
+                  <Select
+                    isMulti
                     name="amenities"
-                    value={formData.amenities}
-                    onChange={(e) => handleSelectChange('amenities', e.target.selectedOptions)}
-                  >
-                    <option value="laundry">Blanchisserie</option>
-                    <option value="taxi">Services de taxi</option>
-                    <option value="car_dealer">Concessionnaire automobile</option>
-                    <option value="event_organizer">Organisateur d'événements</option>
-                  </select>
+                    options={categoryOptions}
+                    className="basic-multi-select"
+                    classNamePrefix="select"
+                    value={categoryOptions.filter((option) =>
+                      formData.amenities.includes(option.value)
+                    )}
+                    onChange={(selected) => handleSelectChange('amenities', selected)}
+                  />
                 </div>
               </div>
             </div>
@@ -1179,7 +1058,7 @@ function Profile() {
           {loading ? 'Enregistrement...' : 'Enregistrer'}
         </button>
       </form>
-    </React.Fragment>
+    </>
   );
 }
 
