@@ -75,7 +75,7 @@ function HeaderAuth() {
                             <strong>{user.name}</strong>
                             <span>Designer</span>
                         </div>
-                        <span className="feather-icon has-toltip">
+                        <span className="feather-icon has-toltip" onClick={onLogout}>
                             <i className="feather-power"></i>
                             <span className="header-toltip">Deconnexion</span>
                         </span>
