@@ -1,32 +1,29 @@
-// src/Profile.jsx
-import React, { useState, useCallback, useMemo } from 'react';
+// src/views/auth/Profil.jsx
+import React, { useCallback, useState, useMemo, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useDropzone } from 'react-dropzone';
-import { GoogleMap, LoadScript, Marker, Autocomplete } from '@react-google-maps/api';
+import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import Select from 'react-select';
+import axiosClient from '../../axios-client';
+import { useStateContext } from '../../context/ContextProvider'
 
 function Profile() {
+  const [currentUser, setCurrentUser] = useState({});
   // State declarations
   const [formData, setFormData] = useState({
-    username: '',
-    companyName: '',
-    firstName: '',
-    lastName: '',
-    gender: '',
-    slogan: '',
+    name: '',
     biography: '',
     mobile: '',
     alternateMobile: '',
-    email: '',
+    email:'',
     address: '',
     apartment: '',
     city: '',
     state: '',
     postalCode: '',
     country: '',
-    latitude: 4.058624677411845, // Default coordinates (Douala, Cameroon)
-    longitude: 9.71139907836914,
-    facebook: '',
+    latitude: 4.051056, // Default: Douala, Cameroon
+    longitude: 9.767868,
     newPassword: '',
     confirmPassword: '',
     categories: [],
@@ -35,64 +32,175 @@ function Profile() {
     videoUrl: '',
   });
 
-  const [avatar, setAvatar] = useState(null);
+  useEffect(() => {
+    axiosClient
+      .get('/user')
+      .then(({ data }) => {
+        setFormData({
+          ...formData,
+          name: data.name || '',
+          biography: data.biographie || '',
+          mobile: data.phone || '',
+          alternateMobile: data.phone2 || '',
+          photo_avatar: data.photo_avatar || 'images/pic-large.jpg',
+          photo_couverture: data.photo_couverture || 'images/banner/job-banner.jpg',
+          latitude: data.latitude || 4.051056, // Default: Douala, Cameroon
+          longitude: data.longitude || 9.767868
+        })
+        console.log('Current user data:', data);
+      })
+      .catch((error) => {
+      });
+  }, []);
+
+  const [avatar, setAvatar] = useState(null); // Default avatar from user data
   const [coverImage, setCoverImage] = useState(null);
   const [galleryFiles, setGalleryFiles] = useState([]);
+  const [frontDocument, setFrontDocument] = useState(null); // Front ID document
+  const [backDocument, setBackDocument] = useState(null); // Back ID document
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const [autocomplete, setAutocomplete] = useState(null);
-  const [mapZoom, setMapZoom] = useState(13); // Default zoom level
-  const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false); // Track API load
+  const [mapZoom, setMapZoom] = useState(15);
+  const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false);
 
   const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+  const autocompleteRef = useRef(null);
 
-  // Define bounds for Douala, Yaoundé, and Bafoussam
+  // Bounds for Douala, Yaoundé, Bafoussam
   const bounds = {
-    south: 3.8, // Southwest of Douala/Yaoundé
+    south: 3.8,
     west: 9.7,
-    north: 5.5, // Northeast of Bafoussam/Yaoundé
+    north: 5.5,
     east: 11.6,
   };
 
-  // Autocomplete options (computed dynamically)
-  const autocompleteOptions = useMemo(() => {
-    if (!isGoogleMapsLoaded || !window.google || !window.google.maps) {
-      return {
-        componentRestrictions: { country: 'cm' }, // Fallback without bounds
+  // Handle file upload for front side
+  const onDropFront = useCallback((acceptedFiles) => {
+    if (acceptedFiles.length > 0) {
+      const file = acceptedFiles[0];
+      setFrontDocument(file);
+    }
+  }, []);
+
+  // Handle file upload for back side
+  const onDropBack = useCallback((acceptedFiles) => {
+    if (acceptedFiles.length > 0) {
+      const file = acceptedFiles[0];
+      setBackDocument(file);
+    }
+  }, []);
+
+  // Configure Dropzone for front side
+  const {
+    getRootProps: getFrontRootProps,
+    getInputProps: getFrontInputProps,
+    isDragActive: isFrontDragActive,
+  } = useDropzone({
+    onDrop: onDropFront,
+    accept: {
+      'image/*': ['.jpeg', '.png', '.jpg'],
+      'application/pdf': ['.pdf'],
+    },
+    maxFiles: 1,
+  });
+
+  // Configure Dropzone for back side
+  const {
+    getRootProps: getBackRootProps,
+    getInputProps: getBackInputProps,
+    isDragActive: isBackDragActive,
+  } = useDropzone({
+    onDrop: onDropBack,
+    accept: {
+      'image/*': ['.jpeg', '.png', '.jpg'],
+      'application/pdf': ['.pdf'],
+    },
+    maxFiles: 1,
+  });
+
+  // Handle PlaceAutocompleteElement selection
+  const handlePlaceSelected = useCallback(
+    async (event) => {
+      if (!GOOGLE_MAPS_API_KEY) {
+        setError('Clé API Google Maps manquante.');
+        return;
+      }
+      const place = event.detail;
+      if (place?.geometry?.location) {
+        const lat = place.geometry.location.lat();
+        const lng = place.geometry.location.lng();
+        const addressComponents = place.address_components || [];
+
+        let address = '';
+        let city = '';
+        let state = '';
+        let postalCode = '';
+        let country = '';
+
+        addressComponents.forEach((component) => {
+          if (component.types.includes('street_number') || component.types.includes('route')) {
+            address += component.long_name + ' ';
+          } else if (component.types.includes('locality')) {
+            city = component.long_name;
+          } else if (component.types.includes('administrative_area_level_1')) {
+            state = component.long_name;
+          } else if (component.types.includes('postal_code')) {
+            postalCode = component.long_name;
+          } else if (component.types.includes('country')) {
+            country = component.long_name;
+          }
+        });
+
+        setFormData((prev) => ({
+          ...prev,
+          address: address.trim() || place.formatted_address || '',
+          city,
+          state,
+          postalCode,
+          country,
+          latitude: lat,
+          longitude: lng,
+        }));
+      } else {
+        setError('Adresse invalide sélectionnée.');
+      }
+    },
+    [GOOGLE_MAPS_API_KEY]
+  );
+
+  // Configure PlaceAutocompleteElement
+  useEffect(() => {
+    if (isGoogleMapsLoaded && autocompleteRef.current) {
+      autocompleteRef.current.componentRestrictions = { country: 'cm' };
+      if (window.google?.maps) {
+        autocompleteRef.current.bounds = new window.google.maps.LatLngBounds(
+          new window.google.maps.LatLng(bounds.south, bounds.west),
+          new window.google.maps.LatLng(bounds.north, bounds.east)
+        );
+        autocompleteRef.current.strictBounds = true;
+      }
+      autocompleteRef.current.addEventListener('gmp-placeselect', handlePlaceSelected);
+      return () => {
+        autocompleteRef.current?.removeEventListener('gmp-placeselect', handlePlaceSelected);
       };
     }
-    return {
-      componentRestrictions: { country: 'cm' }, // Restrict to Cameroon
-      bounds: new window.google.maps.LatLngBounds(
-        new window.google.maps.LatLng(bounds.south, bounds.west),
-        new window.google.maps.LatLng(bounds.north, bounds.east)
-      ),
-      strictBounds: true, // Enforce results within bounds
-    };
-  }, [isGoogleMapsLoaded, bounds]);
+  }, [isGoogleMapsLoaded, handlePlaceSelected]);
 
-  // Handle text input changes
+  // Handle input changes
   const handleInputChange = (e) => {
+    console.log('Input changed:', e.target.name, e.target.value);
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle zoom input change
-  const handleZoomChange = (e) => {
-    const value = parseInt(e.target.value, 10);
-    if (value >= 1 && value <= 20) {
-      setMapZoom(value);
-    }
-  };
-
-  // Handle select multiple (categories, amenities) with react-select
+  // Handle react-select changes
   const handleSelectChange = (name, selectedOptions) => {
     const values = selectedOptions ? selectedOptions.map((option) => option.value) : [];
     setFormData((prev) => ({ ...prev, [name]: values }));
   };
 
-  // Handle file inputs (avatar, cover image)
+  // Handle file inputs
   const handleFileChange = (e, setFile) => {
     const file = e.target.files[0];
     if (file) {
@@ -100,7 +208,7 @@ function Profile() {
     }
   };
 
-  // Handle gallery files with react-dropzone
+  // Handle gallery files
   const { getRootProps, getInputProps } = useDropzone({
     accept: {
       'image/jpeg': ['.jpeg', '.jpg'],
@@ -112,7 +220,7 @@ function Profile() {
     },
   });
 
-  // Handle marker drag or map click to update address
+  // Handle marker drag or map click
   const handleMarkerDragEnd = useCallback(
     async (event) => {
       if (!GOOGLE_MAPS_API_KEY) {
@@ -163,16 +271,16 @@ function Profile() {
             longitude: lng,
           }));
         } else {
-          setError('Impossible de récupérer l\'adresse pour cette position.');
+          setError('Impossible de récupérer l\'adresse.');
         }
       } catch (err) {
-        setError('Erreur lors de la récupération de l\'adresse.');
+        setError('Erreur lors de la géolocalisation.');
       }
     },
     [GOOGLE_MAPS_API_KEY]
   );
 
-  // Handle "Trouver l'adresse" button to geocode address
+  // Handle geocode address button
   const handleGeocodeAddress = useCallback(
     async () => {
       if (!GOOGLE_MAPS_API_KEY) {
@@ -211,63 +319,14 @@ function Profile() {
             longitude: lng,
           }));
         } else {
-          setError('Adresse introuvable. Veuillez vérifier les détails.');
+          setError('Adresse introuvable.');
         }
       } catch (err) {
-        setError('Erreur lors de la géolocalisation de l\'adresse.');
+        setError('Erreur lors de la géolocalisation.');
       }
     },
     [formData, GOOGLE_MAPS_API_KEY]
   );
-
-  // Handle Autocomplete place selection
-  const handlePlaceSelected = useCallback(() => {
-    if (!GOOGLE_MAPS_API_KEY) {
-      setError('Clé API Google Maps manquante.');
-      return;
-    }
-    if (autocomplete) {
-      const place = autocomplete.getPlace();
-      if (place.geometry) {
-        const lat = place.geometry.location.lat();
-        const lng = place.geometry.location.lng();
-        const addressComponents = place.address_components;
-
-        let address = '';
-        let city = '';
-        let state = '';
-        let postalCode = '';
-        let country = '';
-
-        addressComponents.forEach((component) => {
-          if (component.types.includes('street_number') || component.types.includes('route')) {
-            address += component.long_name + ' ';
-          } else if (component.types.includes('locality')) {
-            city = component.long_name;
-          } else if (component.types.includes('administrative_area_level_1')) {
-            state = component.long_name;
-          } else if (component.types.includes('postal_code')) {
-            postalCode = component.long_name;
-          } else if (component.types.includes('country')) {
-            country = component.long_name;
-          }
-        });
-
-        setFormData((prev) => ({
-          ...prev,
-          address: address.trim() || place.formatted_address,
-          city,
-          state,
-          postalCode,
-          country,
-          latitude: lat,
-          longitude: lng,
-        }));
-      } else {
-        setError('Lieu sélectionné sans coordonnées. Veuillez choisir une adresse valide.');
-      }
-    }
-  }, [autocomplete, GOOGLE_MAPS_API_KEY]);
 
   // Handle form submission
   const handleSubmit = async (e) => {
@@ -283,6 +342,7 @@ function Profile() {
     }
 
     const data = new FormData();
+    data.append('_method', 'PUT');
     Object.keys(formData).forEach((key) => {
       if (Array.isArray(formData[key])) {
         formData[key].forEach((item, index) => {
@@ -298,15 +358,14 @@ function Profile() {
     galleryFiles.forEach((file, index) => {
       data.append(`gallery[${index}]`, file);
     });
+    if (frontDocument) data.append('frontDocument', frontDocument);
+    if (backDocument) data.append('backDocument', backDocument);
 
-    try {
-      const response = await axios.post('http://your-laravel-api.com/api/profile/update', data, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      setSuccess('Profil mis à jour avec succès !');
+    await axiosClient.post('/users/update', data, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    .then(() => {
+      setSuccess('Profil mis à jour avec succès !')
       setFormData((prev) => ({
         ...prev,
         newPassword: '',
@@ -315,26 +374,33 @@ function Profile() {
       setAvatar(null);
       setCoverImage(null);
       setGalleryFiles([]);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Une erreur est survenue lors de la mise à jour.');
-    } finally {
+      setFrontDocument(null);
+      setBackDocument(null);
+
+      })
+    .catch((err) => {
+      setError(err.response?.data?.message || 'Erreur lors de la mise à jour du profil.')
+
+      }
+    )
+    .finally(() => {
       setLoading(false);
-    }
+    });
   };
 
-  // Map container style
+  // Map styles
   const mapContainerStyle = {
     height: '460px',
     width: '100%',
   };
 
-  // Center map on current coordinates
+  // Map center
   const center = {
     lat: parseFloat(formData.latitude) || 4.051056,
     lng: parseFloat(formData.longitude) || 9.767868,
   };
 
-  // Memoize the GoogleMap component
+  // Memoized map
   const map = useMemo(
     () => (
       <GoogleMap
@@ -349,7 +415,7 @@ function Profile() {
     [center, mapZoom, handleMarkerDragEnd]
   );
 
-  // Options for categories and amenities
+  // Category options
   const categoryOptions = [
     { value: 'laundry', label: 'Blanchisserie' },
     { value: 'taxi', label: 'Services de taxi' },
@@ -357,32 +423,51 @@ function Profile() {
     { value: 'event_organizer', label: 'Organisateur d\'événements' },
   ];
 
+  // Helper to render file preview
+  const renderFilePreview = (file) => {
+    if (!file) return null;
+    const isImage = ['image/jpeg', 'image/png', 'image/jpg'].includes(file.type);
+    return (
+      <div className="file-preview">
+        {isImage ? (
+          <img
+            src={URL.createObjectURL(file)}
+            alt={file.name}
+            onLoad={(e) => URL.revokeObjectURL(e.target.src)} // Clean up
+          />
+        ) : (
+          <div className="pdf-placeholder">
+            <i className="fa fa-file-pdf-o"></i>
+            <span>{file.name}</span>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (!GOOGLE_MAPS_API_KEY) {
     return (
       <div className="alert alert-danger">
-        Erreur : La clé API Google Maps n'est pas configurée. Veuillez ajouter
-        VITE_GOOGLE_MAPS_API_KEY dans le fichier .env et redémarrer le serveur.
+        Erreur : Clé API Google Maps manquante dans .env.
       </div>
     );
   }
 
   return (
-    <>
+    <div>
       <div className="aon-provi-tabs d-flex flex-wrap justify-content-between">
         <div className="aon-provi-left">
           <ul className="aon-provi-links">
             <li><a href="#aon-about-panel">À propos</a></li>
-            <li><a href="#aon-contact-panel">Contact</a></li>
-            <li><a href="#aon-adress-panel">Adresse</a></li>
-            <li><a href="#aon-socialMedia-panel">Médias sociaux</a></li>
             <li><a href="#aon-passUpdate-panel">Mot de passe</a></li>
+            <li><a href="#aon-adress-panel">Adresse</a></li>
+            <li><a href="#aon-identity-panel">Identité</a></li>
             <li><a href="#aon-category-panel">Catégorie</a></li>
             <li><a href="#aon-amenities-panel">Équipements</a></li>
             <li><a href="#aon-gallery-panel">Galerie</a></li>
             <li><a href="#aon-video-panel">Vidéo</a></li>
           </ul>
         </div>
-        <div className="aon-provi-right"></div>
       </div>
 
       <div className="aon-admin-heading">
@@ -395,11 +480,13 @@ function Profile() {
       <form onSubmit={handleSubmit}>
         {/* About Section */}
         <div className="card aon-card" id="aon-about-panel">
-          <div className="card-header aon-card-header">
-            <h4>
-              <i className="fa fa-user"></i> À propos de moi
-            </h4>
+          <div className="card-header aon-card-header d-flex justify-content-between">
+            <h4><i className="fa fa-user"></i> À propos</h4>
+             <button type="submit" className="btn admin-button" disabled={loading}>
+                {loading ? 'Enregistrement...' : 'Enregistrer'}
+              </button>
           </div>
+         
           <div className="card-body aon-card-body">
             <div className="row">
               <div className="col-xl-6">
@@ -407,7 +494,7 @@ function Profile() {
                   <div className="aon-staff-avtar-header">
                     <div className="aon-pro-avtar-pic">
                       <img
-                        src={avatar ? URL.createObjectURL(avatar) : 'images/pic-large.jpg'}
+                        src={avatar ? URL.createObjectURL(avatar) : formData.photo_avatar || 'images/pic-large.jpg'}
                         alt="Avatar"
                       />
                       <label className="admin-button has-toltip">
@@ -424,11 +511,7 @@ function Profile() {
                     <div className="aon-pro-cover-wrap">
                       <div className="aon-pro-cover-pic">
                         <img
-                          src={
-                            coverImage
-                              ? URL.createObjectURL(coverImage)
-                              : 'images/banner/job-banner.jpg'
-                          }
+                          src={coverImage ? URL.createObjectURL(coverImage) : formData.photo_couverture || 'images/banner/job-banner.jpg'}
                           alt="Cover"
                         />
                       </div>
@@ -444,17 +527,11 @@ function Profile() {
                     </div>
                   </div>
                   <div className="aon-staff-avtar-footer">
-                    <h4 className="aon-staff-avtar-title">Téléchargez votre avatar</h4>
+                    <h4>Téléchargez votre avatar</h4>
                     <ul>
-                      <li>
-                        Largeur et hauteur minimum : <span>600 x 600 px</span>
-                      </li>
-                      <li>
-                        Taille maximale de téléchargement : <span>512 Mo</span>
-                      </li>
-                      <li>
-                        Extensions : <span>JPEG, PNG, GIF</span>
-                      </li>
+                      <li>Largeur/hauteur min : <span>600 x 600 px</span></li>
+                      <li>Taille max : <span>5 Mo</span></li>
+                      <li>Extensions : <span>JPEG, PNG, GIF</span></li>
                     </ul>
                   </div>
                 </div>
@@ -463,47 +540,14 @@ function Profile() {
                 <div className="row">
                   <div className="col-md-6">
                     <div className="form-group">
-                      <label htmlFor="username">Nom d'utilisateur</label>
+                      <label htmlFor="name">Nom</label>
                       <div className="aon-inputicon-box">
                         <input
-                          id="username"
+                          id="name"
                           className="form-control sf-form-control"
-                          name="username"
+                          name="name"
                           type="text"
-                          value={formData.username}
-                          onChange={handleInputChange}
-                          required
-                        />
-                        <i className="aon-input-icon fa fa-user"></i>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="form-group">
-                      <label htmlFor="companyName">Nom de l'entreprise</label>
-                      <div className="aon-inputicon-box">
-                        <input
-                          id="companyName"
-                          className="form-control sf-form-control"
-                          name="companyName"
-                          type="text"
-                          value={formData.companyName}
-                          onChange={handleInputChange}
-                        />
-                        <i className="aon-input-icon fa fa-building-o"></i>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="form-group">
-                      <label htmlFor="firstName">Prénom</label>
-                      <div className="aon-inputicon-box">
-                        <input
-                          id="firstName"
-                          className="form-control sf-form-control"
-                          name="firstName"
-                          type="text"
-                          value={formData.firstName}
+                          value={formData.name}
                           onChange={handleInputChange}
                         />
                         <i className="aon-input-icon fa fa-user"></i>
@@ -511,157 +555,121 @@ function Profile() {
                     </div>
                   </div>
                   <div className="col-md-6">
-                    <div className="form-group">
-                      <label htmlFor="lastName">Nom de famille</label>
-                      <div className="aon-inputicon-box">
+                      <div className="form-group">
+                        <label htmlFor="mobile">Mobile</label>
+                        <div className="aon-inputicon-box">
                         <input
-                          id="lastName"
+                          id="mobile"
                           className="form-control sf-form-control"
-                          name="lastName"
+                          name="mobile"
                           type="text"
-                          value={formData.lastName}
+                          value={formData.mobile}
                           onChange={handleInputChange}
                         />
-                        <i className="aon-input-icon fa fa-user"></i>
-                      </div>
+                        <i className="aon-input-icon fa fa-phone"></i>
                     </div>
                   </div>
-                  <div className="col-md-6 breck-w1400">
-                    <div className="form-group">
-                      <label>Genre</label>
-                      <div className="aon-inputicon-box">
-                        <div className="radio-inline-box sf-radio-check-row">
-                          <div className="checkbox sf-radio-checkbox sf-radio-check-2 sf-raChe-6">
-                            <input
-                              id="male"
-                              name="gender"
-                              value="male"
-                              type="radio"
-                              checked={formData.gender === 'male'}
-                              onChange={handleInputChange}
-                            />
-                            <label htmlFor="male">Homme</label>
-                          </div>
-                          <div className="checkbox sf-radio-checkbox sf-radio-check-2 sf-raChe-6">
-                            <input
-                              id="female"
-                              name="gender"
-                              value="female"
-                              type="radio"
-                              checked={formData.gender === 'female'}
-                              onChange={handleInputChange}
-                            />
-                            <label htmlFor="female">Femme</label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
                   </div>
-                  <div className="col-md-6 breck-w1400">
+                  <div className="col-md-6">
                     <div className="form-group">
-                      <label htmlFor="slogan">Slogan</label>
-                      <div className="aon-inputicon-box">
+                    <label htmlFor="alternateMobile">Mobile alternatif</label>
+                    <div className="aon-inputicon-box">
+                      <input
+                        id="alternateMobile"
+                        className="form-control sf-form-control"
+                        name="alternateMobile"
+                        type="text"
+                        value={formData.alternateMobile}
+                        onChange={handleInputChange}
+                      />
+                      <i className="aon-input-icon fa fa-mobile"></i>
+                </div>
+              </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="form-group">
+                    <label htmlFor="email">E-mail</label>
+                    <div className="aon-inputicon-box">
                         <input
-                          id="slogan"
-                          className="form-control sf-form-control"
-                          name="slogan"
-                          type="text"
-                          value={formData.slogan}
-                          onChange={handleInputChange}
-                        />
-                        <i className="aon-input-icon fa fa-tags"></i>
-                      </div>
+                        id="email"
+                        className="form-control sf-form-control"
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                      />
+                      <i className="aon-input-icon fa fa-envelope"></i>
                     </div>
+                  </div>
                   </div>
                   <div className="col-md-12">
                     <div className="form-group">
                       <label htmlFor="biography">Biographie</label>
-                      <div className="editer-wrap">
-                        <textarea
-                          id="biography"
-                          className="form-control"
-                          name="biography"
-                          rows="4"
-                          value={formData.biography}
-                          onChange={handleInputChange}
-                        ></textarea>
-                      </div>
+                      <textarea
+                        id="biography"
+                        className="form-control"
+                        name="biography"
+                        rows="4"
+                        value={formData.biography}
+                        onChange={handleInputChange}
+                      />
                     </div>
                   </div>
+
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Contact Section */}
-        <div className="card aon-card" id="aon-contact-panel">
+      {/* Password Section */}
+        <div className="card aon-card" id="aon-passUpdate-panel">
           <div className="card-header aon-card-header">
-            <h4>
-              <i className="fa fa-envelope"></i> Détails de contact
-            </h4>
+            <h4><i className="fa fa-lock"></i> Mot de passe</h4>
           </div>
           <div className="card-body aon-card-body">
             <div className="row">
               <div className="col-md-6">
                 <div className="form-group">
-                  <label htmlFor="mobile">Mobile</label>
+                  <label htmlFor="newPassword">Nouveau mot de passe</label>
                   <div className="aon-inputicon-box">
                     <input
-                      id="mobile"
+                      id="newPassword"
                       className="form-control sf-form-control"
-                      name="mobile"
-                      type="text"
-                      value={formData.mobile}
+                      name="newPassword"
+                      type="password"
+                      value={formData.newPassword}
                       onChange={handleInputChange}
                     />
-                    <i className="aon-input-icon fa fa-phone"></i>
+                    <i className="aon-input-icon fa fa-lock"></i>
                   </div>
                 </div>
               </div>
               <div className="col-md-6">
                 <div className="form-group">
-                  <label htmlFor="alternateMobile">Mobile alternatif</label>
+                  <label htmlFor="confirmPassword">Confirmer</label>
                   <div className="aon-inputicon-box">
                     <input
-                      id="alternateMobile"
+                      id="confirmPassword"
                       className="form-control sf-form-control"
-                      name="alternateMobile"
-                      type="text"
-                      value={formData.alternateMobile}
+                      name="confirmPassword"
+                      type="password"
+                      value={formData.confirmPassword}
                       onChange={handleInputChange}
                     />
-                    <i className="aon-input-icon fa fa-mobile"></i>
+                    <i className="aon-input-icon fa fa-lock"></i>
                   </div>
                 </div>
               </div>
-              <div className="col-md-6">
-                <div className="form-group">
-                  <label htmlFor="email">Adresse e-mail</label>
-                  <div className="aon-inputicon-box">
-                    <input
-                      id="email"
-                      className="form-control sf-form-control"
-                      name="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                    />
-                    <i className="aon-input-icon fa fa-envelope"></i>
-                  </div>
-                </div>
-              </div>
-            
             </div>
+            <p>Utilisez une majuscule et un chiffre pour le mot de passe.</p>
           </div>
         </div>
 
         {/* Address Section */}
         <div className="card aon-card" id="aon-adress-panel">
           <div className="card-header aon-card-header">
-            <h4>
-              <i className="fa fa-address-card"></i> Adresse
-            </h4>
+            <h4><i className="fa fa-address-card"></i> Adresse</h4>
           </div>
           <div className="card-body aon-card-body">
             <div className="row">
@@ -672,47 +680,20 @@ function Profile() {
                     <LoadScript
                       googleMapsApiKey={GOOGLE_MAPS_API_KEY}
                       libraries={['places']}
-                      onLoad={() => setIsGoogleMapsLoaded(true)} // Set flag when API loads
+                      onLoad={() => setIsGoogleMapsLoaded(true)}
                     >
-                      <Autocomplete
-                        onLoad={(auto) => setAutocomplete(auto)}
-                        onPlaceChanged={handlePlaceSelected}
-                        options={autocompleteOptions}
-                      >
-                        <input
-                          type="text"
-                          className="form-control mb-3"
-                          placeholder="Rechercher une adresse à Douala, Yaoundé ou Bafoussam"
-                          aria-label="Rechercher une adresse"
-                        />
-                      </Autocomplete>
-                      <div className="form-group mb-3">
-                        <label htmlFor="mapZoom">Niveau de zoom (1-20)</label>
-                        <input
-                          id="mapZoom"
-                          type="number"
-                          className="form-control"
-                          min="1"
-                          max="20"
-                          value={mapZoom}
-                          onChange={handleZoomChange}
-                          aria-label="Niveau de zoom de la carte"
-                        />
-                      </div>
+                     
                       {map}
                     </LoadScript>
                   </div>
                   <button
                     type="button"
-                    className="button rwmb-map-goto-address-button btn btn-primary m-t20"
+                    className="btn btn-primary m-t20"
                     onClick={handleGeocodeAddress}
                   >
-                    Trouver l'adresse sur la carte
+                    Trouver l'adresse
                   </button>
-                  <p>
-                    Remarque : Recherchez des adresses uniquement à Douala, Yaoundé ou Bafoussam.
-                    Déplacez le marqueur ou entrez l'adresse et cliquez sur "Trouver l'adresse".
-                  </p>
+                  <p>Recherchez uniquement à Douala, Yaoundé ou Bafoussam.</p>
                 </div>
               </div>
               <div className="col-md-6">
@@ -733,7 +714,7 @@ function Profile() {
               </div>
               <div className="col-md-6">
                 <div className="form-group">
-                  <label htmlFor="apartment">Appartement/Suite #</label>
+                  <label htmlFor="apartment">Appartement/Suite</label>
                   <div className="aon-inputicon-box">
                     <input
                       id="apartment"
@@ -743,7 +724,7 @@ function Profile() {
                       value={formData.apartment}
                       onChange={handleInputChange}
                     />
-                    <i className="aon-input-icon fa fa-map-marker"></i>
+                    <i className="aon-input-icon fa fa-home"></i>
                   </div>
                 </div>
               </div>
@@ -791,7 +772,7 @@ function Profile() {
                       value={formData.postalCode}
                       onChange={handleInputChange}
                     />
-                    <i className="aon-input-icon fa fa-map-marker"></i>
+                    <i className="aon-input-icon fa fa-map"></i>
                   </div>
                 </div>
               </div>
@@ -807,7 +788,7 @@ function Profile() {
                       value={formData.country}
                       onChange={handleInputChange}
                     />
-                    <i className="aon-input-icon fa fa-map-marker"></i>
+                    <i className="aon-input-icon fa fa-globe"></i>
                   </div>
                 </div>
               </div>
@@ -847,99 +828,64 @@ function Profile() {
           </div>
         </div>
 
-        {/* Social Media Section */}
-        <div className="card aon-card" id="aon-socialMedia-panel">
+        {/* Identity Document Section */}
+        <div className="card aon-card" id="aon-identity-panel">
           <div className="card-header aon-card-header">
-            <h4>
-              <i className="fa fa-share-alt"></i> Médias sociaux
-            </h4>
+            <h4><i className="fa fa-id-card"></i> Télécharger une preuve d'identité</h4>
           </div>
           <div className="card-body aon-card-body">
-            <div className="row">
-              <div className="col-md-6">
-                <div className="form-group">
-                  <label htmlFor="facebook">Facebook</label>
-                  <div className="aon-inputicon-box">
-                    <input
-                      id="facebook"
-                      className="form-control sf-form-control"
-                      name="facebook"
-                      type="url"
-                      value={formData.facebook}
-                      onChange={handleInputChange}
-                    />
-                    <i className="aon-input-icon fa fa-facebook"></i>
-                  </div>
-                </div>
+            <div className="alert alert-warning m-b30">
+              Le processus de vérification des documents est en cours.
+            </div>
+
+            <div className="row justify-content-between m-b10">
+              {renderFilePreview(frontDocument)}
+            {renderFilePreview(backDocument)}
+
+            </div>
+
+          <div className='row justify-content-between'>
+
+            {/* Front Side Upload */}
+            <div
+              {...getFrontRootProps()}
+              className={`dropzone col-5 dropzone-custom  ${isFrontDragActive ? 'dz-drag-active' : ''}`}
+            >
+              <input {...getFrontInputProps()} />
+              <div className="dz-message">
+                <span className="note">Télécharger le recto du document</span>
               </div>
             </div>
+
+            {/* Back Side Upload */}
+            <div
+              {...getBackRootProps()}
+              className={`dropzone col-5 dropzone-custom ${isBackDragActive ? 'dz-drag-active' : ''}`}
+            >
+              <input {...getBackInputProps()} />
+              <div className="dz-message">
+                <span className="note">Télécharger le verso du document</span>
+              </div>
+            </div>
+</div>
+          
+           
           </div>
         </div>
 
-        {/* Password Section */}
-        <div className="card aon-card" id="aon-passUpdate-panel">
-          <div className="card-header aon-card-header">
-            <h4>
-              <i className="fa fa-lock"></i> Mise à jour du mot de passe
-            </h4>
-          </div>
-          <div className="card-body aon-card-body">
-            <div className="row">
-              <div className="col-md-6">
-                <div className="form-group">
-                  <label htmlFor="newPassword">Nouveau mot de passe</label>
-                  <div className="aon-inputicon-box">
-                    <input
-                      id="newPassword"
-                      className="form-control sf-form-control"
-                      name="newPassword"
-                      type="password"
-                      value={formData.newPassword}
-                      onChange={handleInputChange}
-                    />
-                    <i className="aon-input-icon fa fa-lock"></i>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-6">
-                <div className="form-group">
-                  <label htmlFor="confirmPassword">Répéter le mot de passe</label>
-                  <div className="aon-inputicon-box">
-                    <input
-                      id="confirmPassword"
-                      className="form-control sf-form-control"
-                      name="confirmPassword"
-                      type="password"
-                      value={formData.confirmPassword}
-                      onChange={handleInputChange}
-                    />
-                    <i className="aon-input-icon fa fa-lock"></i>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <p>
-              Entrez le même mot de passe dans les deux champs. Utilisez une lettre majuscule et un
-              chiffre pour un mot de passe plus fort.
-            </p>
-          </div>
-        </div>
 
         {/* Category Section */}
         <div className="card aon-card" id="aon-category-panel">
           <div className="card-header aon-card-header">
-            <h4>
-              <i className="fa fa-list-alt"></i> Catégorie
-            </h4>
+            <h4><i className="fa fa-list-alt"></i> Catégorie</h4>
           </div>
           <div className="card-body aon-card-body">
             <div className="row">
               <div className="col-md-12">
                 <div className="form-group">
-                  <label>Catégorie</label>
+                  <label>Catégories</label>
                   <div className="alert alert-info">
-                    Actuellement, vous pouvez choisir 10 catégories. Vous pouvez augmenter ce nombre
-                    en mettant à niveau votre plan d'adhésion.
+                    Maximum 10 catégories. Mettez à niveau votre plan pour plus.
                   </div>
                   <Select
                     isMulti
@@ -981,47 +927,45 @@ function Profile() {
         {/* Amenities Section */}
         <div className="card aon-card" id="aon-amenities-panel">
           <div className="card-header aon-card-header">
-            <h4>
-              <i className="fa fa-shield"></i> Équipements
-            </h4>
+            <h4><i className="fa fa-shield"></i> Équipements</h4>
           </div>
           <div className="card-body aon-card-body">
-            <div className="row">
-              <div className="col-md-12">
-                <div className="form-group">
-                  <label>Équipements</label>
-                  <Select
-                    isMulti
-                    name="amenities"
-                    options={categoryOptions}
-                    className="basic-multi-select"
-                    classNamePrefix="select"
-                    value={categoryOptions.filter((option) =>
-                      formData.amenities.includes(option.value)
-                    )}
-                    onChange={(selected) => handleSelectChange('amenities', selected)}
-                  />
-                </div>
-              </div>
+            <div className="form-group">
+              <label>Équipements</label>
+              <Select
+                isMulti
+                name="amenities"
+                options={categoryOptions}
+                className="basic-multi-select"
+                classNamePrefix="select"
+                value={categoryOptions.filter((option) =>
+                  formData.amenities.includes(option.value)
+                )}
+                onChange={(selected) => handleSelectChange('amenities', selected)}
+              />
             </div>
           </div>
         </div>
 
-        {/* Gallery Section */}
+       {/* Gallery Section */}
         <div className="card aon-card" id="aon-gallery-panel">
           <div className="card-header aon-card-header">
-            <h4>
-              <i className="fa fa-image"></i> Images de la galerie
-            </h4>
+            <h4><i className="fa fa-image"></i> Galerie</h4>
           </div>
           <div className="card-body aon-card-body">
             <div {...getRootProps()} className="dropzone dropzone-custom">
               <input {...getInputProps()} />
-              <p>Glissez-déposez des images ici, ou cliquez pour sélectionner des fichiers</p>
+              <p>Glissez-déposez des images ou cliquez pour sélectionner.</p>
             </div>
-            <div className="mt-3">
+            <div className="gallery-previews mt-3">
               {galleryFiles.map((file, index) => (
-                <div key={index}>{file.name}</div>
+                <div key={index} className="file-preview">
+                  <img
+                    src={URL.createObjectURL(file)}
+                    alt={file.name}
+                    onLoad={(e) => URL.revokeObjectURL(e.target.src)} // Clean up
+                  />
+                </div>
               ))}
             </div>
           </div>
@@ -1030,16 +974,14 @@ function Profile() {
         {/* Video Section */}
         <div className="card aon-card" id="aon-video-panel">
           <div className="card-header aon-card-header">
-            <h4>
-              <i className="fa fa-video-camera"></i> Téléchargement de vidéo
-            </h4>
+            <h4><i className="fa fa-video-camera"></i> Vidéo</h4>
           </div>
           <div className="card-body aon-card-body">
             <div className="input-group mb-3">
               <input
                 type="text"
                 className="form-control"
-                placeholder="Insérez l'URL de la vidéo YouTube, Vimeo ou Facebook"
+                placeholder="URL YouTube, Vimeo ou Facebook"
                 name="videoUrl"
                 value={formData.videoUrl}
                 onChange={handleInputChange}
@@ -1053,12 +995,8 @@ function Profile() {
             </div>
           </div>
         </div>
-
-        <button type="submit" className="btn admin-button" disabled={loading}>
-          {loading ? 'Enregistrement...' : 'Enregistrer'}
-        </button>
       </form>
-    </>
+    </div>
   );
 }
 

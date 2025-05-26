@@ -32,7 +32,6 @@ export default function AuthLayout() {
     { path: 'reservations', icon: 'fa fa-calendar', text: 'Mes réservations' },
     { path: 'equipes', icon: 'fa fa-users', text: "Membres de l'équipe" },
     { path: 'heures_ouvertures', icon: 'fa fa-clock-o', text: "Heures d'ouverture" },
-    { path: 'carte_identite', icon: 'fa fa-id-card-o', text: "Télécharger une pièce d'identité" },
     { path: 'abonnements', icon: 'fa fa-cloud-upload', text: 'Mettre à niveau le compte' },
   ];
 

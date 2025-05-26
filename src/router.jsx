@@ -6,7 +6,6 @@ import Services from "../src/views/auth/Services.jsx";
 import Reservations from "../src/views/auth/Reservations.jsx";
 import Equipes from "../src/views/auth/Equipes.jsx";
 import HeuresOuvertures from "../src/views/auth/HeuresOuvertures.jsx";
-import CarteIdentite from "../src/views/auth/CarteIdentite.jsx";
 import Abonnements from "../src/views/auth/Abonnements.jsx";
 import NotFound from "../src/views/NotFound.jsx";
 import AuthLayout from "./components/layout/AuthLayout.jsx";
@@ -32,7 +31,6 @@ const router = createBrowserRouter([
             { path: '/reservations', element: <Reservations />  },
             { path: '/equipes', element: <Equipes />  },
             { path: '/heures_ouvertures', element: <HeuresOuvertures />  },
-            { path: '/carte_identite', element: <CarteIdentite />  },
             { path: '/abonnements', element: <Abonnements />  },
         ]
     },

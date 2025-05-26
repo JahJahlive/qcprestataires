@@ -11887,14 +11887,14 @@ transition: all 0.5s ease;}
 }
 
 .admin-button,
-.admin-button-secondry { color:#fff; padding:10px 20px; display:inline-block; font-size:14px; font-weight:600; 	outline: none; cursor: pointer; outline: none; 	border-width:0; border-style:solid;
+.admin-button-secondry { color:white; padding:10px 20px; display:inline-block; font-size:14px; font-weight:600; 	outline: none; cursor: pointer; outline: none; 	border-width:0; border-style:solid;
 	border-color:transparent; line-height:1.42857; text-transform:uppercase;	text-decoration:none; border-radius:5px; 	-webkit-border-radius:5px; }
-.admin-button { background-color:#ffb600; color: #000; }
+.admin-button { background-color:darkblue; color: white; }
 
 .admin-button:active,
 .admin-button:hover,
 .admin-button:focus,
-.active > .admin-button { background-color:#ffb600;  }
+.active > .admin-button { background-color:darkblue; color: #000; }
 
 .admin-button-secondry { background-color:#022279; }
 
@@ -12584,7 +12584,7 @@ color:#293742;
 
 .admin-nav-label { background:#ffb600; padding: 4px 8px; margin-left: 10px; box-shadow: 0 5px 5px rgba(0,0,0,0.13); color: #fff; border-radius: 4px; text-align: center; font-weight: 100; font-size: 10px; }
 
-.sf-radio-check-2 {  border: 1px solid #e8edf1; padding: 15px 15px; border-radius: 35px; background: #f7fafc; width: calc(50% - 30px) }
+.sf-radio-check-2 {  border: 1px solid #e8edf1; padding: 15px 15px; border-radius: 35px; background: #f7fafc; }
 .sf-radio-check-2 label { margin:0px; }
 
 .sf-radio-check-row { margin-left:-15px; margin-right:-15px; }
@@ -13858,4 +13858,60 @@ button.close { line-height: 12px; }
 
 .no-results-btn:hover {
   background: #e55a5a;
+}
+
+
+
+/*===========================================
+  Service Card*/
+
+  /* src/index.css */
+
+/* File preview styles */
+.file-preview {
+  margin-top: 10px;
+  width: 200px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  align-content: center;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.file-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.file-preview .pdf-placeholder {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background-color: #f8f9fa;
+  text-align: center;
+  font-size: 24px;
+  color: #6c757d;
+}
+
+.file-preview .pdf-placeholder span {
+  font-size: 12px;
+  color: #333;
+  margin-top: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 90px;
+}
+
+.gallery-previews {
+  display: flex;
+  flex-wrap: wrap;
+  /* Allow previews to wrap to the next line */
+  gap: 10px; /* Space between previews */
 }

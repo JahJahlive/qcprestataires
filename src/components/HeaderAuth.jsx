@@ -69,7 +69,7 @@ function HeaderAuth() {
                     
                     <div className="pro-pic-info-wrap d-flex">
                         <div className="pro-pic-box">
-                            <img src="images/user.jpg" alt=""/>
+                            <img src={user.photo_avatar} alt=""/>
                         </div>
                         <div className="pro-pic-info">
                             <strong>{user.name}</strong>
