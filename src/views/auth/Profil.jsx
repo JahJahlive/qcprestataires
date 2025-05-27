@@ -19,6 +19,8 @@ function Profile() {
     longitude: 9.767868,
     newPassword: '',
     confirmPassword: '',
+    cni_recto: null,
+    cni_verso: null,
     categories: [],
     mainCategory: '',
     amenities: [],
@@ -39,7 +41,10 @@ function Profile() {
           photo_avatar: data.photo_avatar || 'images/pic-large.jpg',
           photo_couverture: data.photo_couverture || 'images/banner/job-banner.jpg',
           latitude: data.latitude || 4.051056, // Default: Douala, Cameroon
-          longitude: data.longitude || 9.767868
+          longitude: data.longitude || 9.767868,
+          cni_recto: data.cni_recto || null,
+          cni_verso: data.cni_verso || null,
+          gallery: data.gallery || [],
         })
         console.log('Current user data:', data);
       })
@@ -351,8 +356,8 @@ function Profile() {
     galleryFiles.forEach((file, index) => {
       data.append(`gallery[${index}]`, file);
     });
-    if (frontDocument) data.append('recto', frontDocument);
-    if (backDocument) data.append('verso', backDocument);
+    if (frontDocument) data.append('cni_recto', frontDocument);
+    if (backDocument) data.append('cni_verso', backDocument);
 
     await axiosClient.post('/users/update', data, {
       headers: { 'Content-Type': 'multipart/form-data' },
@@ -421,18 +426,14 @@ function Profile() {
     const isImage = ['image/jpeg', 'image/png', 'image/jpg'].includes(file.type);
     return (
       <div className="file-preview">
-        {isImage ? (
+        {isImage &&(
           <img
             src={URL.createObjectURL(file)}
             alt={file.name}
             onLoad={(e) => URL.revokeObjectURL(e.target.src)} // Clean up
           />
-        ) : (
-          <div className="pdf-placeholder">
-            <i className="fa fa-file-pdf-o"></i>
-            <span>{file.name}</span>
-          </div>
-        )}
+        )
+        }
       </div>
     );
   };
@@ -667,7 +668,7 @@ function Profile() {
             <div className="row">
               <div className="col-md-12">
                 <div className="form-group">
-                  <label className='text-danger'>Mettez le marker sur votre adresse</label>
+                  <label className='text-danger'>Rafraichir la page si la carte ne se charge pas.</label>
                   <div className="address-area-map">
                     <LoadScript
                       googleMapsApiKey={GOOGLE_MAPS_API_KEY}
@@ -763,8 +764,24 @@ function Profile() {
 
             <div className="row justify-content-between m-b10">
               {renderFilePreview(frontDocument)}
-            {renderFilePreview(backDocument)}
+              {renderFilePreview(backDocument)}
 
+              <div className="file-preview">
+                {formData.cni_recto && (
+                  <img
+                    src={formData.cni_recto}
+                    alt=""
+                  />
+                )}
+              </div>
+              <div className="file-preview">
+                {formData.cni_verso && (
+                  <img
+                    src={formData.cni_verso}
+                    alt=""
+                  />
+                )}
+              </div>
             </div>
 
           <div className='row justify-content-between'>
@@ -790,7 +807,7 @@ function Profile() {
                 <span className="note">Télécharger le verso du document</span>
               </div>
             </div>
-</div>
+            </div>
           
            
           </div>
@@ -876,11 +893,7 @@ function Profile() {
             <h4><i className="fa fa-image"></i> Galerie</h4>
           </div>
           <div className="card-body aon-card-body">
-            <div {...getRootProps()} className="dropzone dropzone-custom">
-              <input {...getInputProps()} />
-              <p>Glissez-déposez des images ou cliquez pour sélectionner.</p>
-            </div>
-            <div className="gallery-previews mt-3">
+            <div className="gallery-previews mb-3">
               {galleryFiles.map((file, index) => (
                 <div key={index} className="file-preview">
                   <img
@@ -891,6 +904,18 @@ function Profile() {
                 </div>
               ))}
             </div>
+            <div className="row mb-3 ">
+              {formData.gallery && formData.gallery.map(({url}, index) => (
+                <div key={index} className="file-preview">
+                  <img src={url} alt={`Gallery ${index}`} />
+                </div>
+              ))}
+            </div>
+            <div {...getRootProps()} className="dropzone dropzone-custom">
+              <input {...getInputProps()} />
+              <p>Glissez-déposez des images ou cliquez pour sélectionner.</p>
+            </div>
+            
           </div>
         </div>
 
