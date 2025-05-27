@@ -1,14 +1,11 @@
 // src/views/auth/Profil.jsx
 import React, { useCallback, useState, useMemo, useEffect, useRef } from 'react';
-import axios from 'axios';
 import { useDropzone } from 'react-dropzone';
 import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import Select from 'react-select';
 import axiosClient from '../../axios-client';
-import { useStateContext } from '../../context/ContextProvider'
 
 function Profile() {
-  const [currentUser, setCurrentUser] = useState({});
   // State declarations
   const [formData, setFormData] = useState({
     name: '',
@@ -17,11 +14,7 @@ function Profile() {
     alternateMobile: '',
     email:'',
     address: '',
-    apartment: '',
     city: '',
-    state: '',
-    postalCode: '',
-    country: '',
     latitude: 4.051056, // Default: Douala, Cameroon
     longitude: 9.767868,
     newPassword: '',
@@ -39,6 +32,7 @@ function Profile() {
         setFormData({
           ...formData,
           name: data.name || '',
+          email: data.email || '',
           biography: data.biographie || '',
           mobile: data.phone || '',
           alternateMobile: data.phone2 || '',
@@ -61,7 +55,6 @@ function Profile() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const [mapZoom, setMapZoom] = useState(15);
   const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false);
 
   const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
@@ -358,8 +351,8 @@ function Profile() {
     galleryFiles.forEach((file, index) => {
       data.append(`gallery[${index}]`, file);
     });
-    if (frontDocument) data.append('frontDocument', frontDocument);
-    if (backDocument) data.append('backDocument', backDocument);
+    if (frontDocument) data.append('recto', frontDocument);
+    if (backDocument) data.append('verso', backDocument);
 
     await axiosClient.post('/users/update', data, {
       headers: { 'Content-Type': 'multipart/form-data' },
@@ -371,8 +364,7 @@ function Profile() {
         newPassword: '',
         confirmPassword: '',
       }));
-      setAvatar(null);
-      setCoverImage(null);
+
       setGalleryFiles([]);
       setFrontDocument(null);
       setBackDocument(null);
@@ -406,13 +398,13 @@ function Profile() {
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
         center={center}
-        zoom={mapZoom}
+        zoom={15}
         onClick={handleMarkerDragEnd}
       >
         <Marker position={center} draggable={true} onDragEnd={handleMarkerDragEnd} />
       </GoogleMap>
     ),
-    [center, mapZoom, handleMarkerDragEnd]
+    [center, handleMarkerDragEnd]
   );
 
   // Category options
@@ -675,7 +667,7 @@ function Profile() {
             <div className="row">
               <div className="col-md-12">
                 <div className="form-group">
-                  <label>Emplacement</label>
+                  <label className='text-danger'>Mettez le marker sur votre adresse</label>
                   <div className="address-area-map">
                     <LoadScript
                       googleMapsApiKey={GOOGLE_MAPS_API_KEY}
@@ -686,17 +678,10 @@ function Profile() {
                       {map}
                     </LoadScript>
                   </div>
-                  <button
-                    type="button"
-                    className="btn btn-primary m-t20"
-                    onClick={handleGeocodeAddress}
-                  >
-                    Trouver l'adresse
-                  </button>
-                  <p>Recherchez uniquement à Douala, Yaoundé ou Bafoussam.</p>
+                  <p></p>
                 </div>
               </div>
-              <div className="col-md-6">
+              {/* <div className="col-md-6">
                 <div className="form-group">
                   <label htmlFor="address">Adresse</label>
                   <div className="aon-inputicon-box">
@@ -712,22 +697,7 @@ function Profile() {
                   </div>
                 </div>
               </div>
-              <div className="col-md-6">
-                <div className="form-group">
-                  <label htmlFor="apartment">Appartement/Suite</label>
-                  <div className="aon-inputicon-box">
-                    <input
-                      id="apartment"
-                      className="form-control sf-form-control"
-                      name="apartment"
-                      type="text"
-                      value={formData.apartment}
-                      onChange={handleInputChange}
-                    />
-                    <i className="aon-input-icon fa fa-home"></i>
-                  </div>
-                </div>
-              </div>
+            
               <div className="col-md-6">
                 <div className="form-group">
                   <label htmlFor="city">Ville</label>
@@ -744,55 +714,8 @@ function Profile() {
                   </div>
                 </div>
               </div>
-              <div className="col-md-6">
-                <div className="form-group">
-                  <label htmlFor="state">État</label>
-                  <div className="aon-inputicon-box">
-                    <input
-                      id="state"
-                      className="form-control sf-form-control"
-                      name="state"
-                      type="text"
-                      value={formData.state}
-                      onChange={handleInputChange}
-                    />
-                    <i className="aon-input-icon fa fa-map-marker"></i>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-6">
-                <div className="form-group">
-                  <label htmlFor="postalCode">Code postal</label>
-                  <div className="aon-inputicon-box">
-                    <input
-                      id="postalCode"
-                      className="form-control sf-form-control"
-                      name="postalCode"
-                      type="text"
-                      value={formData.postalCode}
-                      onChange={handleInputChange}
-                    />
-                    <i className="aon-input-icon fa fa-map"></i>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-6">
-                <div className="form-group">
-                  <label htmlFor="country">Pays</label>
-                  <div className="aon-inputicon-box">
-                    <input
-                      id="country"
-                      className="form-control sf-form-control"
-                      name="country"
-                      type="text"
-                      value={formData.country}
-                      onChange={handleInputChange}
-                    />
-                    <i className="aon-input-icon fa fa-globe"></i>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-6">
+           */}
+              {/* <div className="col-md-6">
                 <div className="form-group">
                   <label htmlFor="latitude">Latitude</label>
                   <div className="aon-inputicon-box">
@@ -823,7 +746,7 @@ function Profile() {
                     <i className="aon-input-icon fa fa-street-view"></i>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
