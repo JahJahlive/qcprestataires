@@ -1,393 +1,233 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react';
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import frLocale from '@fullcalendar/core/locales/fr'; // Import French locale
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography } from '@mui/material';
+import { MdAdd } from 'react-icons/md';
+import axios from 'axios';
+import { motion } from 'framer-motion';
+import axiosClient from '../../axios-client';
 
-function Reservations() {
+const Reservations = () => {
+  const [events, setEvents] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [newEvent, setNewEvent] = useState({
+    title: '',
+    start: '',
+    end: '',
+    clientName: '',
+    clientPhone: '',
+    amount: '',
+  });
+  const [selectedDate, setSelectedDate] = useState(null);
+
+  // Fetch events from Laravel API
+  useEffect(() => {
+    axiosClient.get('/bookings')
+      .then(({ data }) => {
+        const formattedEvents = data.map(event => ({
+          id: event.id,
+          title: event.title,
+          start: event.start,
+          end: event.end,
+          extendedProps: {
+            status: event.status,
+            agentName: event.agent_name,
+            clientName: event.client_name,
+            clientPhone: event.client_phone,
+            amount: event.amount,
+            paymentStatus: event.payment_status,
+          },
+        }));
+        setEvents(formattedEvents);
+      })
+      .catch((error) => {
+        console.error('Erreur lors de la récupération des événements:', error);
+        alert('Échec de la récupération des événements: ' + (error.response?.data?.errors || 'Erreur inconnue'));
+      })
+  }, []);
+
+  // Handle date selection
+  const handleDateSelect = (selectInfo) => {
+    setSelectedDate(selectInfo);
+    setNewEvent({
+      ...newEvent,
+      start: selectInfo.startStr,
+      end: selectInfo.endStr,
+    });
+    setOpen(true);
+  };
+
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewEvent({ ...newEvent, [name]: value });
+  };
+
+  // Save new event
+  const handleSaveEvent = async () => {
+    try {
+      const response = await axios.post('http://localhost:8000/api/events', {
+        title: newEvent.title,
+        start: newEvent.start,
+        end: newEvent.end,
+        client_name: newEvent.clientName,
+        client_phone: newEvent.clientPhone,
+        amount: parseFloat(newEvent.amount),
+      });
+      setEvents([...events, {
+        id: response.data.id,
+        title: response.data.title,
+        start: response.data.start,
+        end: response.data.end,
+        extendedProps: {
+          status: response.data.status,
+          agentName: response.data.agent_name,
+          clientName: response.data.client_name,
+          clientPhone: response.data.client_phone,
+          amount: response.data.amount,
+          paymentStatus: response.data.payment_status,
+        },
+      }]);
+      setOpen(false);
+      setNewEvent({ title: '', start: '', end: '', clientName: '', clientPhone: '', amount: '' });
+      selectedDate.view.calendar.unselect(); // Clear selection
+    } catch (error) {
+      console.error('Erreur lors de l\'enregistrement de l\'événement:', error);
+      alert('Échec de l\'enregistrement de l\'événement: ' + (error.response?.data?.errors || 'Erreur inconnue'));
+    }
+  };
+
+  // Render event content
+  const renderEventContent = (eventInfo) => (
+    <Box sx={{ p: 1 }}>
+      <Typography variant="body2"><b>{eventInfo.timeText}</b> {eventInfo.event.title}</Typography>
+      <Typography variant="caption">Client: {eventInfo.event.extendedProps.clientName}</Typography>
+    </Box>
+  );
+
   return (
-    <>
-    <div className="aon-admin-heading">
-      <h4>Mes Réservations</h4>
-    </div>
-
-    <div className="card aon-card">
-      <div className="card-body aon-card-body">
-        <div className="sf-bd-data-tb-head">
-          <button
-            className="admin-button"
-            data-toggle="modal"
-            data-target="#downloadreport"
-            type="button"
-            aria-label="Télécharger le rapport"
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+      <Box sx={{ p: 3 }}>
+        <div className='d-flex justify-content-between align-items-center mb-3'>
+          <Typography variant="h4" gutterBottom>Mes Réservations</Typography>
+          <Button
+            variant="contained"
+            startIcon={<MdAdd />}
+            sx={{ mb: 2 }}
+            onClick={() => setOpen(true)}
+            id='add-reservation-button'
           >
-            <i className="fa fa-plus"></i>
-            Télécharger le rapport
-          </button>
+            Ajouter une Réservation
+          </Button>
         </div>
+        <FullCalendar
+          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          initialView="timeGridWeek"
+          events={events}
+          selectable={true}
+          select={handleDateSelect}
+          eventContent={renderEventContent}
+          locale="fr" // Set French locale
+          locales={[frLocale]} // Include French locale
+          headerToolbar={{
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay',
+          }}
+          buttonText={{
+            today: 'Aujourd\'hui',
+            month: 'Mois',
+            week: 'Semaine',
+            day: 'Jour',
+          }}
+          slotMinTime="08:00:00"
+          slotMaxTime="24:00:00"
+          allDaySlot={false}
+          allDayText="Toute la journée"
+          slotLabelFormat={{
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          }}
+          eventTimeFormat={{
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          }}
+        />
+        <Dialog open={open} onClose={() => setOpen(false)}>
+          <DialogTitle>Ajouter une Réservation</DialogTitle>
+          <DialogContent>
+            <TextField
+              fullWidth
+              label="Titre"
+              name="title"
+              value={newEvent.title}
+              onChange={handleInputChange}
+              margin="normal"
+              required
+            />
+            <TextField
+              fullWidth
+              label="Nom du Client"
+              name="clientName"
+              value={newEvent.clientName}
+              onChange={handleInputChange}
+              margin="normal"
+              required
+            />
+            <TextField
+              fullWidth
+              label="Téléphone du Client"
+              name="clientPhone"
+              value={newEvent.clientPhone}
+              onChange={handleInputChange}
+              margin="normal"
+              required
+            />
+            <TextField
+              fullWidth
+              label="Montant (€)"
+              name="amount"
+              type="number"
+              value={newEvent.amount}
+              onChange={handleInputChange}
+              margin="normal"
+              required
+            />
+            <TextField
+              fullWidth
+              label="Début"
+              name="start"
+              type="datetime-local"
+              value={newEvent.start}
+              onChange={handleInputChange}
+              margin="normal"
+              InputLabelProps={{ shrink: true }}
+              required
+            />
+            <TextField
+              fullWidth
+              label="Fin"
+              name="end"
+              type="datetime-local"
+              value={newEvent.end}
+              onChange={handleInputChange}
+              margin="normal"
+              InputLabelProps={{ shrink: true }}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpen(false)}>Annuler</Button>
+            <Button onClick={handleSaveEvent} variant="contained">Enregistrer</Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </motion.div>
+  );
+};
 
-        {/* Week Tabs */}
-        <div className="sf-availability-times-tab m-b50">
-          <div className="sf-custom-tabs sf-custom-new">
-            {/* Tabs */}
-            <ul className="nav nav-tabs nav-table-cell">
-              <li>
-                <a data-toggle="tab" href="#Upcoming" className="active">
-                  À venir
-                </a>
-              </li>
-              <li>
-                <a data-toggle="tab" href="#Past">
-                  Passées
-                </a>
-              </li>
-            </ul>
-            {/* Tabs Content */}
-            <div className="tab-content">
-              {/* Upcoming */}
-              <div id="Upcoming" className="tab-pane active">
-                <div className="sf-tabs-content">
-                  <div className="sf-bs-data-table">
-                    <div className="table-responsive">
-                      <table
-                        className="table table-striped table-bordered example-dt-table aon-booking-table"
-                        style={{ width: '100%' }}
-                      >
-                        <thead>
-                          <tr>
-                            <th>
-                              <div className="checkbox sf-radio-checkbox">
-                                <input id="th1_1" name="abc" value="five" type="radio" />
-                                <label htmlFor="th1_1">
-                                  <span className="btn btn-danger btn-xs" title="Supprimer">
-                                    <i className="fa fa-trash-o"></i>
-                                  </span>
-                                </label>
-                              </div>
-                            </th>
-                            <th>Informations de réservation</th>
-                            <th>Informations de paiement</th>
-                            <th>Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {[
-                            { id: '1115', inputId: 'td2_2' },
-                            { id: '1114', inputId: 'td2' },
-                            { id: '11113', inputId: 'td3' },
-                            { id: '11123', inputId: 'td4' },
-                          ].map((booking) => (
-                            <tr key={booking.id}>
-                              <td>
-                                <div className="checkbox sf-radio-checkbox">
-                                  <input
-                                    id={booking.inputId}
-                                    name="abc"
-                                    value="five"
-                                    type="radio"
-                                  />
-                                  <label htmlFor={booking.inputId}></label>
-                                </div>
-                              </td>
-                              <td>
-                                <div className="sf-booking-info-col">
-                                  <span className="sf-booking-refid">#{booking.id}</span>
-                                  <span className="booking-status sf-booking-incomplete">
-                                    Incomplète
-                                  </span>
-                                  <div className="sf-booking-upcoming">Travail</div>
-                                  <div className="sf-booking-customer">
-                                    <ul className="customer-info">
-                                      <li>
-                                        <strong>
-                                          <i className="fa fa-user"></i> Nom de l'agent
-                                        </strong>{' '}
-                                        Heima Agency
-                                      </li>
-                                      <li>
-                                        <strong>
-                                          <i className="fa fa-user"></i> Nom du client
-                                        </strong>{' '}
-                                        LAURA BARRERA
-                                      </li>
-                                      <li>
-                                        <strong>
-                                          <i className="fa fa-phone"></i> Téléphone du client
-                                        </strong>{' '}
-                                        +52 81 1911 2887
-                                      </li>
-                                      <li>
-                                        <strong>
-                                          <i className="fa fa-calendar-o"></i> Date
-                                        </strong>{' '}
-                                        2021-12-26
-                                      </li>
-                                      <li>
-                                        <strong>
-                                          <i className="fa fa-clock-o"></i> Heure
-                                        </strong>{' '}
-                                        13:25:00
-                                      </li>
-                                    </ul>
-                                  </div>
-                                  <button
-                                    type="button"
-                                    className="admin-button assignButton margin-r-10"
-                                  >
-                                    <i className="fa fa-user"></i>
-                                    Assigner maintenant
-                                  </button>
-                                </div>
-                              </td>
-                              <td>
-                                <div className="inner">
-                                  <h3>
-                                    <span
-                                      className="sf-booking-payment-info"
-                                      data-toggle="popover"
-                                      data-container="body"
-                                      data-placement="top"
-                                      data-html="true"
-                                      id={`payinfo-${booking.id}`}
-                                      data-trigger="hover"
-                                    >
-                                      85.00€
-                                    </span>
-                                    <span className="sf-payment-status">Payé</span>
-                                  </h3>
-                                  <div
-                                    id={`popover-content-payinfo-${booking.id}`}
-                                    className="hide sf-pop-hide"
-                                  >
-                                    <ul className="list-unstyled margin-0 booking-payment-data">
-                                      <li>
-                                        <strong>Montant total :</strong> 85.00€
-                                      </li>
-                                      <li>
-                                        <strong>Frais des prestataires :</strong> 57.00€
-                                      </li>
-                                      <li>
-                                        <strong>Frais administratifs :</strong> 28.00€
-                                      </li>
-                                      <li>
-                                        <strong>Méthode de paiement :</strong>
-                                      </li>
-                                      <li>
-                                        <strong>Paiement admin aux prestataires :</strong>{' '}
-                                        En attente
-                                      </li>
-                                      <li>
-                                        <strong>ID de transaction :</strong> NA
-                                      </li>
-                                    </ul>
-                                  </div>
-                                </div>
-                              </td>
-                              <td>
-                                <button
-                                  type="button"
-                                  className="admin-button btn-sm viewBookings"
-                                  title="Voir la réservation"
-                                >
-                                  <i className="fa fa-eye"></i>
-                                </button>
-                                <button
-                                  type="button"
-                                  className="admin-button btn-sm"
-                                  title="Changer le statut"
-                                >
-                                  <i className="fa fa-battery-half"></i>
-                                </button>
-                                <button
-                                  type="button"
-                                  className="admin-button btn-sm addInvoice margin-r-5"
-                                  title="Ajouter une facture"
-                                >
-                                  <i className="fa fa-plus"></i>
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Past */}
-              <div id="Past" className="tab-pane">
-                <div className="sf-tabs-content">
-                  <div className="sf-bs-data-table">
-                    <div className="table-responsive">
-                      <table
-                        className="table table-striped table-bordered example-dt-table aon-booking-table"
-                        style={{ width: '100%' }}
-                      >
-                        <thead>
-                          <tr>
-                            <th>
-                              <div className="checkbox sf-radio-checkbox">
-                                <input id="2th1" name="abc" value="five" type="radio" />
-                                <label htmlFor="2th1">
-                                  <span className="btn btn-danger btn-xs" title="Supprimer">
-                                    <i className="fa fa-trash-o"></i>
-                                  </span>
-                                </label>
-                              </div>
-                            </th>
-                            <th>Informations de réservation</th>
-                            <th>Informations de paiement</th>
-                            <th>Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {[
-                            { id: '1118', inputId: '2td1' },
-                            { id: '1111', inputId: '2td2' },
-                            { id: '11153', inputId: '2td3' },
-                            { id: '1119', inputId: '2td4' },
-                          ].map((booking) => (
-                            <tr key={booking.id}>
-                              <td>
-                                <div className="checkbox sf-radio-checkbox">
-                                  <input
-                                    id={booking.inputId}
-                                    name="abc"
-                                    value="five"
-                                    type="radio"
-                                  />
-                                  <label htmlFor={booking.inputId}></label>
-                                </div>
-                              </td>
-                              <td>
-                                <div className="sf-booking-info-col">
-                                  <span className="sf-booking-refid">#{booking.id}</span>
-                                  <span className="booking-status sf-booking-incomplete">
-                                    Incomplète
-                                  </span>
-                                  <div className="sf-booking-upcoming">Travail</div>
-                                  <div className="sf-booking-customer">
-                                    <ul className="customer-info">
-                                      <li>
-                                        <strong>
-                                          <i className="fa fa-user"></i> Nom de l'agent
-                                        </strong>{' '}
-                                        Heima Agency
-                                      </li>
-                                      <li>
-                                        <strong>
-                                          <i className="fa fa-user"></i> Nom du client
-                                        </strong>{' '}
-                                        LAURA BARRERA
-                                      </li>
-                                      <li>
-                                        <strong>
-                                          <i className="fa fa-phone"></i> Téléphone du client
-                                        </strong>{' '}
-                                        +52 81 1911 2887
-                                      </li>
-                                      <li>
-                                        <strong>
-                                          <i className="fa fa-calendar-o"></i> Date
-                                        </strong>{' '}
-                                        2021-12-26
-                                      </li>
-                                      <li>
-                                        <strong>
-                                          <i className="fa fa-clock-o"></i> Heure
-                                        </strong>{' '}
-                                        13:25:00
-                                      </li>
-                                    </ul>
-                                  </div>
-                                  <button
-                                    type="button"
-                                    className="admin-button assignButton margin-r-10"
-                                  >
-                                    <i className="fa fa-user"></i>
-                                    Assigner maintenant
-                                  </button>
-                                </div>
-                              </td>
-                              <td>
-                                <div className="inner">
-                                  <h3>
-                                    <span
-                                      className="sf-booking-payment-info"
-                                      data-toggle="popover"
-                                      data-container="body"
-                                      data-placement="top"
-                                      data-html="true"
-                                      id={`payinfo-${booking.id}`}
-                                      data-trigger="hover"
-                                    >
-                                      85.00€
-                                    </span>
-                                    <span className="sf-payment-status">Payé</span>
-                                  </h3>
-                                  <div
-                                    id={`popover-content-payinfo-${booking.id}`}
-                                    className="hide sf-pop-hide"
-                                  >
-                                    <ul className="list-unstyled margin-0 booking-payment-data">
-                                      <li>
-                                        <strong>Montant total :</strong> 85.00€
-                                      </li>
-                                      <li>
-                                        <strong>Frais des prestataires :</strong> 57.00€
-                                      </li>
-                                      <li>
-                                        <strong>Frais administratifs :</strong> 28.00€
-                                      </li>
-                                      <li>
-                                        <strong>Méthode de paiement :</strong>
-                                      </li>
-                                      <li>
-                                        <strong>Paiement admin aux prestataires :</strong>{' '}
-                                        En attente
-                                      </li>
-                                      <li>
-                                        <strong>ID de transaction :</strong> NA
-                                      </li>
-                                    </ul>
-                                  </div>
-                                </div>
-                              </td>
-                              <td>
-                                <button
-                                  type="button"
-                                  className="admin-button btn-sm viewBookings"
-                                  title="Voir la réservation"
-                                >
-                                  <i className="fa fa-eye"></i>
-                                </button>
-                                <button
-                                  type="button"
-                                  className="admin-button btn-sm"
-                                  title="Changer le statut"
-                                >
-                                  <i className="fa fa-battery-half"></i>
-                                </button>
-                                <button
-                                  type="button"
-                                  className="admin-button btn-sm addInvoice margin-r-5"
-                                  title="Ajouter une facture"
-                                >
-                                  <i className="fa fa-plus"></i>
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </>
-  )
-}
-
-export default Reservations
+export default Reservations;
