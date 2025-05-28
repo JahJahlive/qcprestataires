@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
+import { useStateContext } from '../../context/ContextProvider';
 
 function HeuresOuvertures() {
+  const { user } = useStateContext();
+
   // Time options for dropdowns
   const timeOptions = Array.from({ length: 96 }, (_, i) => {
     const hours = Math.floor(i / 4);
@@ -13,16 +16,32 @@ function HeuresOuvertures() {
     return { value, label };
   });
 
-  // State for business hours
+  // Initialize business hours from backend payload
   const [businessHours, setBusinessHours] = useState({
-    Lundi: { isOpen: true, startTime: '08:00:00', endTime: '18:00:00' },
-    Mardi: { isOpen: true, startTime: '08:00:00', endTime: '18:00:00' },
-    Mercredi: { isOpen: true, startTime: '08:00:00', endTime: '18:00:00' },
-    Jeudi: { isOpen: true, startTime: '08:00:00', endTime: '18:00:00' },
-    Vendredi: { isOpen: true, startTime: '08:00:00', endTime: '18:00:00' },
-    Samedi: { isOpen: true, startTime: '08:00:00', endTime: '18:00:00' },
-    Dimanche: { isOpen: false, startTime: '08:00:00', endTime: '18:00:00' },
+    Lundi: { id: null, isOpen: false, startTime: '08:00:00', endTime: '18:00:00' },
+    Mardi: { id: null, isOpen: false, startTime: '08:00:00', endTime: '18:00:00' },
+    Mercredi: { id: null, isOpen: false, startTime: '08:00:00', endTime: '18:00:00' },
+    Jeudi: { id: null, isOpen: false, startTime: '08:00:00', endTime: '18:00:00' },
+    Vendredi: { id: null, isOpen: false, startTime: '08:00:00', endTime: '18:00:00' },
+    Samedi: { id: null, isOpen: false, startTime: '08:00:00', endTime: '18:00:00' },
+    Dimanche: { id: null, isOpen: false, startTime: '08:00:00', endTime: '18:00:00' },
   });
+
+  // Fetch and set business hours from backend on component mount
+  useEffect(() => {
+    // Map backend data to state format
+    const updatedHours = { ...businessHours };
+    user.heures_ouvertures?.forEach((item) => {
+      const dayKey = item.day.charAt(0).toUpperCase() + item.day.slice(1);
+      updatedHours[dayKey] = {
+        id: item.id,
+        isOpen: item.is_open,
+        startTime: item.start_time ? `${item.start_time}:00` : '08:00:00',
+        endTime: item.end_time ? `${item.end_time}:00` : '18:00:00',
+      };
+    });
+    setBusinessHours(updatedHours);
+  }, []); // Empty dependency array to run once on mount
 
   // Helper to convert time string to minutes for comparison
   const timeToMinutes = (time) => {
@@ -64,15 +83,37 @@ function HeuresOuvertures() {
   };
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const hoursArray = Object.entries(businessHours).map(([day, details]) => ({
-      day,
-      isOpen: details.isOpen,
-      startTime: details.isOpen ? details.startTime : null,
-      endTime: details.isOpen ? details.endTime : null,
+      id: details.id,
+      day: day.toLowerCase(),
+      is_open: details.isOpen,
+      start_time: details.isOpen ? details.startTime.slice(0, 5) : null,
+      end_time: details.isOpen ? details.endTime.slice(0, 5) : null,
+      user_id: user.id, // Assuming user object has an id property
     }));
-    console.log('Business Hours:', hoursArray);
+
+    console.log('Business Hours to Submit:', hoursArray);
+
+    // Example API call to send data to backend
+    try {
+      const response = await fetch('/api/heures_ouvertures', {
+        method: 'POST', // or 'PUT' if updating
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(hoursArray),
+      });
+      if (response.ok) {
+        alert('Horaires mis à jour avec succès !');
+      } else {
+        alert('Erreur lors de la mise à jour des horaires.');
+      }
+    } catch (error) {
+      console.error('Error submitting hours:', error);
+      alert('Une erreur est survenue.');
+    }
   };
 
   // Days of the week in French
@@ -95,7 +136,7 @@ function HeuresOuvertures() {
                     <label className="switch">
                       <input
                         type="checkbox"
-                        checked={businessHours[day].isOpen}
+                        checked={businessHours[day].is_open}
                         onChange={() => handleToggleChange(day)}
                         aria-label={`Activer/Désactiver ${day}`}
                       />
