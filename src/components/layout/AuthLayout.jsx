@@ -26,13 +26,13 @@ export default function AuthLayout() {
 
   // List of routes for sidebar links
   const navItems = [
-    { path: 'dashboard', icon: 'fa fa-dashboard', text: 'Accueil', exact: true },
+ //   { path: 'dashboard', icon: 'fa fa-dashboard', text: 'Accueil', exact: true },
     { path: 'profil', icon: 'fa fa-user-circle-o', text: 'Profil' },
-    { path: 'services', icon: 'fa fa-cogs', text: 'Mes services' },
+//    { path: 'services', icon: 'fa fa-cogs', text: 'Mes services' },
     { path: 'reservations', icon: 'fa fa-calendar', text: 'Mes réservations' },
-    { path: 'equipes', icon: 'fa fa-users', text: "Membres de l'équipe" },
-    { path: 'heures_ouvertures', icon: 'fa fa-clock-o', text: "Heures d'ouverture" },
-    { path: 'abonnements', icon: 'fa fa-cloud-upload', text: 'Mettre à niveau le compte' },
+//    { path: 'equipes', icon: 'fa fa-users', text: "Membres de l'équipe" },
+//    { path: 'heures_ouvertures', icon: 'fa fa-clock-o', text: "Heures d'ouverture" },
+//    { path: 'abonnements', icon: 'fa fa-cloud-upload', text: 'Mettre à niveau le compte' },
   ];
 
   return (

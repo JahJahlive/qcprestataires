@@ -310,10 +310,10 @@ const Reservations = () => {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
-      <Box sx={{ p: 3 }}>
+      <Box>
         {isLoading && <CircularProgress sx={{ display: 'block', mx: 'auto', my: 2 }} />}
-        <div className='d-flex justify-content-between align-items-center mb-3'>
-          <Typography variant="h4" gutterBottom>Mes Réservations</Typography>
+        <div className='d-flex justify-content-between align-items-center mb-3 p-0'>
+          <Typography variant="h5" gutterBottom>Mes Réservations</Typography>
           <Button
             variant="contained"
             startIcon={<MdAdd />}
@@ -321,7 +321,7 @@ const Reservations = () => {
             onClick={() => setOpenCreate(true)}
             id='add-reservation-button'
           >
-            Ajouter une Réservation
+            <span></span>
           </Button>
         </div>
         <FullCalendar

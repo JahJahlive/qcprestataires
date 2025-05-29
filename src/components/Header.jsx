@@ -87,27 +87,26 @@ function Header() {
 
                 (
                   <div
-                    className="site-buttdon aon-btn-logein mx-1"
-                    style={{fontSize: '25px', cursor: 'pointer', color: 'darkblue'}}
+                    className="site-buttdon aon-btn-logein mx-1 rounded-pill"
+                    style={{fontSize: '25px', cursor: 'pointer', color: 'darkblue', backgroundColor: 'white', padding: '5px 15px', border: '1px solid darkblue'}}
                     data-toggle="modal"
                     data-target="#login-signup-model"
                   >
-                    <i className="fa fa-user"></i> 
+                    <i className="fa fa-user-circle-o"></i><span style={{ fontSize: '15px' }}>  Se Connecter</span>
                   </div>
                 )
               }
               {
                 !_.isEmpty(user) &&  (location.pathname === '/') &&
                 (
-                  <div className="d-flex align-items-center justify-content-center gap-2">
-                   
-                    <div className="mx-2" style={{color: 'darkblue', fontSize: '25px', cursor: 'pointer'}} onClick={() => navigate('/dashboard')}>
-                      <i className="fa fa-user "></i> 
+                  <div style={{cursor: 'pointer'}} className="pro-pic-info-wrap d-flex cursor" onClick={() => navigate('/profil')}>
+                      <div className="pro-pic-box">
+                          <img src={user.photo_avatar} alt=""/>
+                      </div>
+                      <div className="pro-pic-info">
+                          <strong>{user.name}</strong>
+                      </div>
                     </div>
-                    <div className="mx-2" style={{color: 'darkblue', fontSize: '25px', cursor: 'pointer'}} onClick={onLogout}>
-                      <i className="feather-log-out "></i> 
-                    </div>
-                  </div>
                 )
               }  
                 

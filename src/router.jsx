@@ -25,13 +25,13 @@ const router = createBrowserRouter([
         path: '/', 
         element: <AuthLayout />, 
         children: [
-            { path: '/dashboard', element: <Dashboard />  },
+           // { path: '/dashboard', element: <Dashboard />  },
             { path: '/profil', element: <Profil />  },
-            { path: '/services', element: <Services />  },
+        //    { path: '/services', element: <Services />  },
             { path: '/reservations', element: <Reservations />  },
-            { path: '/equipes', element: <Equipes />  },
-            { path: '/heures_ouvertures', element: <HeuresOuvertures />  },
-            { path: '/abonnements', element: <Abonnements />  },
+        //    { path: '/equipes', element: <Equipes />  },
+         //   { path: '/heures_ouvertures', element: <HeuresOuvertures />  },
+        //    { path: '/abonnements', element: <Abonnements />  },
         ]
     },
     { 

@@ -18,7 +18,7 @@ const InputField = ({ iconClass, ...props }) => (
 );
 
 function LoginModal() {
-  const [activeTab, setActiveTab] = useState('signup');
+  const [activeTab, setActiveTab] = useState('login');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const { setToken, setUser } = useStateContext();

@@ -72,7 +72,7 @@ function Footer({ categories }) {
             <div className="sf-f-copyright">
                 <span>Copyright 2025 | YK Solutions. All Rights Reserved</span>
             </div>
-            <div className="sf-f-social">
+            {/* <div className="sf-f-social">
                 <ul className="socila-box">
                 <li>
                     <a href="javascript:void(0);">
@@ -95,8 +95,8 @@ function Footer({ categories }) {
                     </a>
                 </li>
                 </ul>
-            </div>
-            </div>
+            </div> */}
+        </div>
         </div>
       </div>
     </footer>

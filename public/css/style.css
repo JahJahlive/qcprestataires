@@ -11939,7 +11939,7 @@ transition: all 0.5s ease;}
 .aon-staff-avtar { margin-bottom:30px; }	
 }
 
-.pro-my-account-wrap { color:#999; border-bottom:1px solid #ddd; padding:15px 30px; }
+.pro-my-account-wrap { color:#999; border-bottom:1px solid #ddd; padding:15px 15px; }
 
 .pro-pic-info-wrap .pro-pic-box { width:45px; height:45px; float:left; border-radius:50px; overflow:hidden; margin-right:15px; }
 .pro-pic-info-wrap strong { display:block; color:#022279; line-height:1.4; }
@@ -13964,7 +13964,7 @@ button.close { line-height: 12px; }
   background-color: darkblue;
   color: white;
   border: none;
-  padding: 8px 16px;
+  padding: 8px;
   font-size: 0.9em;
   border-radius: 4px;
   cursor: pointer;
