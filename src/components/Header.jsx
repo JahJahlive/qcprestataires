@@ -71,10 +71,14 @@ function Header() {
 
             {/* MAIN Nav */}
             <div className="nav-animation header-nav navbar-collapse collapse d-flex justify-content-start">
-                <ul className="nav navbar-nav">
+              {
+                (location.pathname === '/') && (
+                  <ul className="nav navbar-nav">
                   <li><a href="#specialistes">Contracteurs</a></li>
                   <li><a href="#contact">Contact</a></li>
-                </ul>
+                  </ul>
+                )
+              }
             </div>
 
             {/* Header Right Section */}
@@ -112,7 +116,7 @@ function Header() {
                 
                 {
                     (location.pathname !== '/') && (
-                      <Link to='/' className="site-button aon-btn-signup  text-white">
+                      <Link to='/' className="aon-btn-signup" style={{ fontSize: '25px', color: 'darkblue', backgroundColor: 'white', padding: '5px'}}>
                         <i className="fa fa-home"></i> 
                       </Link>
                     )

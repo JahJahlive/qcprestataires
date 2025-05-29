@@ -19,7 +19,6 @@ const InputField = ({ iconClass, ...props }) => (
 
 function LoginModal() {
   const [activeTab, setActiveTab] = useState('login');
-  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const { setToken, setUser } = useStateContext();
   const navigate = useNavigate();
@@ -51,7 +50,6 @@ function LoginModal() {
       confirmPassword: '',
       role: '',
     });
-    setError(null);
     setActiveTab('login'); // Reset to default tab
   };
 
@@ -78,7 +76,6 @@ function LoginModal() {
       ...prev,
       [name]: value,
     }));
-    setError(null); // Clear error on input change
   };
 
   // Handle signup form input changes
@@ -88,7 +85,6 @@ function LoginModal() {
       ...prev,
       [name]: value,
     }));
-    setError(null); // Clear error on input change
   };
 
   // Validate login form
@@ -131,7 +127,7 @@ function LoginModal() {
     e.preventDefault();
     const validationError = validateLogin();
     if (validationError) {
-      setError(validationError);
+      toastr.error(validationError);
       return;
     }
 
@@ -143,9 +139,9 @@ function LoginModal() {
       closeModal(); // Close modal and remove backdrop
       
       toastr.success('Connexion Reussie')
-      navigate('/dashboard'); // Navigate to dashboard
+      navigate('/profil'); // Navigate to dashboard
     } catch (err) {
-      setError(err.response?.data?.message || 'Connexion échouée');
+      toastr.error(err.response?.data?.message || 'Connexion échouée');
     } finally {
       setLoading(false);
     }
@@ -156,7 +152,7 @@ function LoginModal() {
     e.preventDefault();
     const validationError = validateSignup();
     if (validationError) {
-      setError(validationError);
+      toastr.error(validationError);
       return;
     }
 
@@ -167,9 +163,9 @@ function LoginModal() {
       setToken(response.data.token);
       resetModal(); // Reset modal state
       closeModal(); // Close modal and remove backdrop
-      navigate('/dashboard'); // Navigate to dashboard
+      navigate('/profil'); // Navigate to dashboard
     } catch (err) {
-      setError(err.response?.data?.message || 'Inscription échouée');
+      toastr.error(err.response?.data?.message || 'Inscription échouée');
     } finally {
       setLoading(false);
     }
@@ -207,7 +203,6 @@ function LoginModal() {
               </ul>
               {/* Tabs Content */}
               <div className="tab-content">
-                {error && <p style={{ color: 'red' }}>{error}</p>}
                 {/* Login Form */}
                 <div className={`tab-pane fade ${activeTab === 'login' ? 'show active' : ''}`} id="Upcoming">
                   <div className="sf-tabs-content">

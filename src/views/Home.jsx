@@ -171,6 +171,7 @@ export default function Home() {
                         <li>
                         <label>Ville</label>
                         <select
+                        required
                          onChange={handleChange}
                          value={payload.ville}
                             className="sf-select-bohx form-control sf-form-control"
